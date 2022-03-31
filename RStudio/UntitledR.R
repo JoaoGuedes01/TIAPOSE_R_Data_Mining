@@ -3,6 +3,7 @@ library(tidyverse)
 library(DataExplorer)
 
 setwd("~/escola/2 semestre/TIAPOSE/projeto")
+print('olá')
 data <- read.csv(file = 'store.csv', sep = ';')
 data %>%
 create_report(
