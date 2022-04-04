@@ -2,8 +2,9 @@ data <- read.csv(file = '../data/store.csv', sep = ';')
 
 
 
-# ver que obsercações correspondem aos valores de 7961 9371 9163 8300 8270 15735 7719 11110
+# ver que obsercaï¿½ï¿½es correspondem aos valores de 7961 9371 9163 8300 8270 15735 7719 11110
 data[data$all %in% c(7961, 9371, 9163, 8300, 8270, 15735, 7719, 11110),]
+print('ola')
 
 
 # conclusoes:
