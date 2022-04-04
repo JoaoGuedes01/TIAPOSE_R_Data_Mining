@@ -1,8 +1,9 @@
 library(dplyr)
 library(tidyverse)
 library(DataExplorer)
+print('ola')
 
-setwd("D:/UNIVERSIDADE/4º Ano/2º Semestre/TIAPOSE/TIAPOSE_R_Data_Mining")
+setwd("D:/UNIVERSIDADE/4ï¿½ Ano/2ï¿½ Semestre/TIAPOSE/TIAPOSE_R_Data_Mining")
 data <- read.csv(file = 'store.csv', sep = ';')
 data %>%
 create_report(
@@ -13,4 +14,4 @@ create_report(
 )
 
 
-store = read.csv("D:/UNIVERSIDADE/4º Ano/2º Semestre/TIAPOSE/TIAPOSE_R_Data_Mining/data/store.csv")
+store = read.csv("D:/UNIVERSIDADE/4ï¿½ Ano/2ï¿½ Semestre/TIAPOSE/TIAPOSE_R_Data_Mining/data/store.csv")
