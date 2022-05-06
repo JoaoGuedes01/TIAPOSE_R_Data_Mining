@@ -15,3 +15,9 @@ create_report(
 
 
 store = read.csv("D:/UNIVERSIDADE/4� Ano/2� Semestre/TIAPOSE/TIAPOSE_R_Data_Mining/data/store.csv")
+
+library(stringr)
+week = "1-2-3-4-5-6-7"
+weeksplitaux = strsplit(week,"-")
+weeksplit = unlist(weeksplitaux[1])
+weekvector = as.vector(weeksplit)
