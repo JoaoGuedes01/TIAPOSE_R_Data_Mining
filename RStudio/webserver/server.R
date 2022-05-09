@@ -1,6 +1,6 @@
 library(plumber)
 
-pr <- plumb("serverFunctions.R")
+pr <- plumb("serverRouting.R")
 
 pr$run(port=8000)
 

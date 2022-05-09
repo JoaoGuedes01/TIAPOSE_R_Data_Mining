@@ -16,31 +16,25 @@ ts3 = ts3 %>% select(-X)
 ts4 = ts4 %>% select(-X)
 ts5 = ts5 %>% select(-X)
 
+# --------------------------------------------- Modeling -------------------------------------------------------
 
-
-
-predict = function(week){
-  week="1_2_3_4_5_6_7"
-  weeksplit = strsplit(week,"_")
-  print(weeksplit)
-  weekvector = unlist(weeksplit[1])
-  print(weekvector[1])
-  
-  allIndex = c(1:nrow(ts1))
-  semanaEsc = weekvector
-  tr = as.numeric(allIndex)[-as.numeric(semanaEsc)]
-  ts = as.numeric(semanaEsc)
-  
-  print("TR")
-  print(tr)
-  print("TS")
-  print(ts)
-  
-  # Hybrid Model
+# Best Hybrid Model (HW + LM)
+HybridModel = function(firstDay,lastDay){
   # Create Dataframe for Prediction Storage
   preds <- data.frame(matrix(ncol = 8, nrow = 0))
   # Name the Columns
   colnames(preds) <- c('ts','v1','v2','v3','v4','v5','v6','v7')
+  
+  # Holdout based on selected week
+  allIndex = c(1:nrow(ts1))
+  semanaEsc = c(firstDay:lastDay) #101-107
+  tr = allIndex[-semanaEsc]
+  ts = semanaEsc
+  
+  cat("TR")
+  tr
+  cat("TS")
+  ts
   
   
   K=7
@@ -58,9 +52,9 @@ predict = function(week){
       "young"= {data=ts4},
       "adult"= {data=ts5},
     ) 
-    # print("TS:",timeSeries[t],"\n")
+    cat("TS:",timeSeries[t],"\n")
     
-    d1 = data[,1] # coluna all
+    d1 = data[,1] # 1ª coluna
     L = length(d1) # 257
     
     # rminer:
@@ -90,16 +84,22 @@ predict = function(week){
     mae=mmetric(y=d1[ts],x=Pred2,metric="MAE",val=YR)
     nmae=mmetric(y=d1[ts],x=Pred2,metric="NMAE",val=YR)
     
-    #print("Predictions:",Pred2,"\n")
-    #print("MAE:",mae,"\n")
-    #print("NMAE:",nmae,"\n")
+    cat("Predictions:",Pred2,"\n")
+    cat("MAE:",mae,"\n")
+    cat("NMAE:",nmae,"\n")
     
     preds[nrow(preds) + 1,] = c(timeSeries[t],Pred2[1],Pred2[2],Pred2[3],Pred2[4],Pred2[5],Pred2[6],Pred2[7])     
     
   }
-  
+  print(preds)
+  return(preds)
+}
+
+# --------------------------------------------- Optimization -------------------------------------------------------
+
+# Hill Climbing
+hillClimbing = function(preds){
   # Optimization(Hill Climbing)
-  
   source("./otimizacao/hill.R") #  hclimbing is defined here
   
   #Create dimension of time series
@@ -169,9 +169,6 @@ predict = function(week){
   HC=hclimbing(par=solution,fn=profit,change=rchange1,lower=lower,upper=upper,type="max",
                control=list(maxit=N,REPORT=REPORT,digits=2))
   cat("best solution:",HC$sol,"evaluation function",HC$eval,"\n")
-  
-  
-  
-  res = c(tr,ts)
-  return('ok')
+  res = HC$sol
+  return(res)
 }
