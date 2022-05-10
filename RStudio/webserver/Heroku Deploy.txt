@@ -1,0 +1,18 @@
+# get the sources
+git clone https://github.com/virtualstaticvoid/heroku-plumber-app.git
+cd heroku-plumber-app
+
+# optionally, reinitialize git
+rm -rf .git
+git init -b main
+git add --all
+git commit -m "initial"
+
+# create a new heroku application, set the buildpack and deploy
+heroku create --stack=heroku-20 --buildpack vsv/heroku-buildpack-r
+
+# deploy
+git push heroku main
+
+# view the application
+heroku open /__docs__/

@@ -12,11 +12,3 @@ function(firsDay,lastDay){
   res = hillClimbing(preds)
   return(res)
 }
-
-
-#* @get /
-function(){
-  
-  page = "./vue_build/index.html"
-  return(page)
-}
