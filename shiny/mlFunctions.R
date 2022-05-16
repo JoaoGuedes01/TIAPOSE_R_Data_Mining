@@ -16,25 +16,36 @@ ts3 = ts3 %>% select(-X)
 ts4 = ts4 %>% select(-X)
 ts5 = ts5 %>% select(-X)
 
+dates <- read.csv(file = './extra/date.csv')["x"]
+
+
+
 # --------------------------------------------- Modeling -------------------------------------------------------
 
+
 # Best Hybrid Model (HW + LM)
-HybridModel = function(firstDay,lastDay){
+HybridModel = function(day){
+  days = getWeek(day)
+  
   # Create Dataframe for Prediction Storage
   preds <- data.frame(matrix(ncol = 8, nrow = 0))
+  predsUI <- data.frame(matrix(ncol = 8, nrow = 0))
   # Name the Columns
   colnames(preds) <- c('ts','v1','v2','v3','v4','v5','v6','v7')
+  colnames(predsUI) <- c("Time Series", as.array(days$week))
+  
+  
   
   # Holdout based on selected week
-  allIndex = c(1:nrow(ts1))
-  semanaEsc = c(firstDay:lastDay) #101-107
+  allIndex = c(1:nrow(dates))
+  semanaEsc = c(days$initial:days$final) #101-107
   tr = allIndex[-semanaEsc]
   ts = semanaEsc
   
-  cat("TR")
-  tr
-  cat("TS")
-  ts
+  print("TR")
+  print(tr)
+  print("TS")
+  print(ts)
   
   
   K=7
@@ -88,11 +99,12 @@ HybridModel = function(firstDay,lastDay){
     cat("MAE:",mae,"\n")
     cat("NMAE:",nmae,"\n")
     
-    preds[nrow(preds) + 1,] = c(timeSeries[t],Pred2[1],Pred2[2],Pred2[3],Pred2[4],Pred2[5],Pred2[6],Pred2[7])     
-    
+    preds[nrow(preds) + 1,] = c(timeSeries[t],Pred2[1],Pred2[2],Pred2[3],Pred2[4],Pred2[5],Pred2[6],Pred2[7])
+    predsUI[nrow(predsUI) + 1,] = c(timeSeries[t],Pred2[1],Pred2[2],Pred2[3],Pred2[4],Pred2[5],Pred2[6],Pred2[7])
   }
-  print(preds)
-  return(preds)
+  res <- list(preds = preds, predsUI = predsUI)
+  print(res)
+  return(res)
 }
 
 # --------------------------------------------- Optimization -------------------------------------------------------
@@ -169,6 +181,20 @@ hillClimbing = function(preds){
   HC=hclimbing(par=solution,fn=profit,change=rchange1,lower=lower,upper=upper,type="max",
                control=list(maxit=N,REPORT=REPORT,digits=2))
   cat("best solution:",HC$sol,"evaluation function",HC$eval,"\n")
-  res = HC$sol
+  best = HC$sol
+  res = list(ts1=best[1:7],ts2=best[8:14],ts3=best[15:21],ts4=best[22:28],ts5=best[29:35])
   return(res)
 }
+
+# test "2013-05-14"
+getWeek = function(date){
+  # get index of specific date
+  initial = which(dates == date)
+  final = initial + 6
+  dayRange = c(initial:final)
+  week = dates[dayRange,]
+  res <- list(initial = initial, final = final,week=week)
+  return(res)
+}
+
+
