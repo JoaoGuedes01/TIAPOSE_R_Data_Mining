@@ -2,8 +2,10 @@ library(shiny)
 library(shinythemes)
 library(bslib)
 
-forecast <- c("uf1","uf2","uf3")
-rminer <- c("ur1","ur2","ur3")
+source("mlFunctions.R")
+
+rminer <- c("lm","mlpe","naive","ctree","mlp","randomForest","mr","rvm","ksvm")
+forecast <- c("HW","Arima","NN","ETS")
 
 listaopt <- c("opt1","opt2","opt3")
 
@@ -114,26 +116,37 @@ server = function(input,output,session){
     uni_model = input$unimodel_uni
     opt_model = input$optmodel_uni
     
+    if(input$cen_multi == "Scenario 1 (Untouched)"){
+      cen = "cen1"
+    }else if(input$cen_multi == "Scenario 2 (No outliers)"){
+      cen = "cen2"
+    }else{
+      cen = "cen3"
+    }
     
-    print(solutionType)
-    print(cen)
-    print(uni_model)
-    print(opt_model)
+    # test day
+    week = c(36:42)
+    preds = UnivariateModel(cen,uni_model,week)
   },ignoreInit = TRUE)
   
   # Multivariate Model
   observeEvent(input$predict_btn_multi,{
     # alocating variables 
     solutionType = "multi"
-    cen = input$cen_multi
     multi_model = input$multimodel_multi
     opt_model = input$optmodel_multi
     
+    if(input$cen_multi == "Scenario 1 (Untouched)"){
+      cen = "cen1"
+    }else if(input$cen_multi == "Scenario 2 (No outliers)"){
+      cen = "cen2"
+    }else{
+      cen = "cen3"
+    }
     
-    print(solutionType)
-    print(cen)
-    print(multi_model)
-    print(opt_model)
+    # test day
+    day = "2013-05-14"
+    preds = MultivariateModel(cen,multi_model,day)
   },ignoreInit = TRUE)
 }
 

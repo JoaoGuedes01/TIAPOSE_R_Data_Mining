@@ -4,24 +4,180 @@ library(rminer)
 library(forecast)
 
 
-ts1 <- read.csv(file = './cenarios/Cenario 1/TS1.csv')
-ts2 <- read.csv(file = './cenarios/Cenario 1/TS2.csv')
-ts3 <- read.csv(file = './cenarios/Cenario 1/TS3.csv')
-ts4 <- read.csv(file = './cenarios/Cenario 1/TS4.csv')
-ts5 <- read.csv(file = './cenarios/Cenario 1/TS5.csv')
-
-ts1 = ts1 %>% select(-X)
-ts2 = ts2 %>% select(-X)
-ts3 = ts3 %>% select(-X)
-ts4 = ts4 %>% select(-X)
-ts5 = ts5 %>% select(-X)
-
-dates <- read.csv(file = './extra/date.csv')["x"]
-
-
 
 # --------------------------------------------- Modeling -------------------------------------------------------
+# test "2013-05-14"
+getWeek = function(date){
+  # get index of specific date
+  initial = which(dates == date)
+  final = initial + 6
+  dayRange = c(initial:final)
+  week = dates[dayRange,]
+  res <- list(initial = initial, final = final,week=week)
+  return(res)
+}
 
+
+initVars = function(){
+  dates <<- read.csv(file = './extra/date.csv')["x"]
+  timeSeries <<- c("all","female","male","young","adult")
+  models_rminer <<- c("lm","mlpe","naive","ctree","mlp","randomForest","mr","rvm","ksvm")
+  models_forecast <<- c("HW","Arima","NN","ETS")
+  print("Variables Initialized")
+}
+# Initialize necessary vars
+initVars()
+
+
+loadData = function(cen){
+  switch(  
+    cen,  
+    "cen1"= {folder = "Cenario 1"},
+    "cen2"= {folder = "Cenario 2"},
+    "cen3"= {folder = "Cenario 3"}
+  )
+  path_ts1 = paste(as.character("cenarios"),folder,as.character("TS1.csv"),sep = "\\")
+  ts1 <<- read.csv(file = path_ts1)
+  ts1 <<- subset (ts1, select = -X)
+  
+  path_ts2 = paste(as.character("cenarios"),folder,as.character("TS2.csv"),sep = "\\")
+  ts2 <<- read.csv(file = path_ts2)
+  ts2 <<- subset (ts2, select = -X)
+  
+  path_ts3 = paste(as.character("cenarios"),folder,as.character("TS3.csv"),sep = "\\")
+  ts3 <<- read.csv(file = path_ts3)
+  ts3 <<- subset (ts3, select = -X)
+  
+  path_ts4 = paste(as.character("cenarios"),folder,as.character("TS4.csv"),sep = "\\")
+  ts4 <<- read.csv(file = path_ts4)
+  ts4 <<- subset (ts4, select = -X)
+  
+  path_ts5 = paste(as.character("cenarios"),folder,as.character("TS5.csv"),sep = "\\")
+  ts5 <<- read.csv(file = path_ts5)
+  ts5 <<- subset (ts5, select = -X)
+}
+
+parseDF = function(df,chosen){
+  data = df
+  removed = data[chosen,]
+  data = data[- chosen,]
+  res = rbind(data,removed)
+  row.names(res) <- NULL
+  return(res)
+}
+
+MultivariateModel = function(cen,pmodel,day){
+  loadData(cen)
+  # Create Dataframe for Prediction Storage
+  preds <- data.frame(matrix(ncol = 8, nrow = 0))
+  # Name the Columns
+  colnames(preds) <- c('ts','v1','v2','v3','v4','v5','v6','v7')
+  
+  days = getWeek(day)
+  
+  # Holdout based on selected week
+  allIndex = c(1:nrow(dates))
+  semanaEsc = c(days$initial:days$final) #101-107
+  tr = allIndex[-semanaEsc]
+  ts = semanaEsc
+  
+  for (t in 1:length(timeSeries)){
+    currentTS = timeSeries[t]
+    switch(  
+      currentTS,  
+      "all"= {data=ts1 ; target = all~.},
+      "female"= {data=ts2; target = female~.},
+      "male"= {data=ts3; target = male~.},
+      "young"= {data=ts4; target = young~.},
+      "adult"= {data=ts5; target = adult~.},
+    )
+    
+    # Creating the Model and making the predictions
+    M=fit(target,data[tr,],model=pmodel)
+    Pred=predict(M,data[ts,])
+    preds[nrow(preds) + 1,] = c(timeSeries[t],Pred[1],Pred[2],Pred[3],Pred[4],Pred[5],Pred[6],Pred[7])
+  }
+  print(preds)
+}
+
+
+
+UnivariateModel = function(cen,model,week){
+  # Load the Datasets
+  loadData(cen)
+  
+  # Create Dataframe for Prediction Storage
+  preds <- data.frame(matrix(ncol = 8, nrow = 0))
+  # Name the Columns
+  colnames(preds) <- c('ts','v1','v2','v3','v4','v5','v6','v7')
+  
+
+  if(model %in% models_forecast){
+    for (t in 1:length(timeSeries)){
+      currentTS = timeSeries[t]
+      switch(  
+        currentTS,  
+        "all"= {data=ts1},
+        "female"= {data=ts2},
+        "male"= {data=ts3},
+        "young"= {data=ts4},
+        "adult"= {data=ts5},
+      )
+      
+      d1 = data[,1] # coluna target
+      L = length(d1)
+      K=7
+      Test = K
+      
+      data = parseDF(data,week)
+      H=holdout(data[,1],ratio=7,mode="order")
+      dtr = ts(d1[H$tr],frequency=K)
+      switch(  
+        model,  
+        "HW"= {M = suppressWarnings(HoltWinters(dtr))},
+        "Arima"= {M = suppressWarnings(auto.arima(dtr))},
+        "NN"= {M = suppressWarnings(nnetar(dtr,p=7))},
+        "ETS"= {M = suppressWarnings(ets(dtr))},
+      )  
+      Pred = forecast(M,h=length(H$ts))$mean[1:Test]
+      preds[nrow(preds) + 1,] = c(timeSeries[t],Pred[1],Pred[2],Pred[3],Pred[4],Pred[5],Pred[6],Pred[7])
+      
+    }
+    print(preds)
+    return(preds)
+  }else{
+    for (t in 1:length(timeSeries)){
+      currentTS = timeSeries[t]
+      switch(  
+        currentTS,  
+        "all"= {data=ts1},
+        "female"= {data=ts2},
+        "male"= {data=ts3},
+        "young"= {data=ts4},
+        "adult"= {data=ts5},
+      )
+      
+      data = parseDF(data,week)
+      
+      d1 = data[,1] # coluna target
+      L = length(d1)
+      K=7
+      Test = K
+      
+      timelags = c(1:7)
+      D = CasesSeries(d1,timelags)
+      
+      H=holdout(data[,1],ratio=7,mode="order")
+      
+      M = fit(y~.,D[H$tr,],model=model)
+      Pred = lforecast(M,D,start=(length(H$tr)+1),Test)
+      preds[nrow(preds) + 1,] = c(timeSeries[t],Pred[1],Pred[2],Pred[3],Pred[4],Pred[5],Pred[6],Pred[7])
+    }
+    print(preds)
+    return(preds)
+  }
+
+}
 
 # Best Hybrid Model (HW + LM)
 HybridModel = function(day){
@@ -42,28 +198,22 @@ HybridModel = function(day){
   tr = allIndex[-semanaEsc]
   ts = semanaEsc
   
-  print("TR")
-  print(tr)
-  print("TS")
-  print(ts)
-  
-  
   K=7
   Test=K # H, the number of multi-ahead steps, adjust if needed
   S=K # step jump: set in this case to 7 predictions
-  timeSeries = c("all","female","male","young","adult")
+ 
   
   for (t in 1:length(timeSeries)){
-    
+    currentTS = timeSeries[t]
     switch(  
-      t,  
+      currentTS,  
       "all"= {data=ts1},
       "female"= {data=ts2},
       "male"= {data=ts3},
       "young"= {data=ts4},
       "adult"= {data=ts5},
     ) 
-    cat("TS:",timeSeries[t],"\n")
+    cat("TS:",currentTS,"\n")
     
     d1 = data[,1] # 1ª coluna
     L = length(d1) # 257
@@ -186,15 +336,8 @@ hillClimbing = function(preds){
   return(res)
 }
 
-# test "2013-05-14"
-getWeek = function(date){
-  # get index of specific date
-  initial = which(dates == date)
-  final = initial + 6
-  dayRange = c(initial:final)
-  week = dates[dayRange,]
-  res <- list(initial = initial, final = final,week=week)
-  return(res)
-}
+
+
+
 
 
