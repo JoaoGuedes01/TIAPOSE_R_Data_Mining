@@ -6,14 +6,21 @@ library(forecast)
 
 
 # --------------------------------------------- Modeling -------------------------------------------------------
+
+
+Holdout <- function(week){
+  selected <- c(week)
+  rest <- c(1:(selected[1] - 1))
+  res <- list(tr=rest,ts=selected)
+}
+
+
 # test "2013-05-14"
-getWeek = function(date){
-  # get index of specific date
-  initial = which(dates == date)
-  final = initial + 6
-  dayRange = c(initial:final)
-  week = dates[dayRange,]
-  res <- list(initial = initial, final = final,week=week)
+getWeek = function(weekNumber){
+  init = 33
+  resInit <- 7 * (weekNumber-1) + init
+  resFinal <- resInit + 7
+  res <- c(resInit:resFinal)
   return(res)
 }
 
@@ -23,6 +30,40 @@ initVars = function(){
   timeSeries <<- c("all","female","male","young","adult")
   models_rminer <<- c("lm","mlpe","naive","ctree","mlp","randomForest","mr","rvm","ksvm")
   models_forecast <<- c("HW","Arima","NN","ETS")
+  weeks <<- list(
+    "Week 1" = 1,
+    "week 2" = 2,
+    "week 3" = 3,
+    "week 4" = 4,
+    "week 5" = 5,
+    "week 6" = 6,
+    "week 7" = 7,
+    "week 8" = 8,
+    "week 9" = 9,
+    "week 10" = 10,
+    "week 11" = 11,
+    "week 12" = 12,
+    "week 13" = 13,
+    "week 14" = 14,
+    "week 15" = 15,
+    "week 16" = 16,
+    "week 17" = 17,
+    "week 18" = 18,
+    "week 19" = 19,
+    "week 20" = 20,
+    "week 21" = 21,
+    "week 22" = 22,
+    "week 23" = 23,
+    "week 24" = 24,
+    "week 25" = 25,
+    "week 26" = 26,
+    "week 27" = 27,
+    "week 28" = 28,
+    "week 29" = 29,
+    "week 30" = 30,
+    "week 31" = 31,
+    "week 32" = 32
+  )
   print("Variables Initialized")
 }
 # Initialize necessary vars
@@ -57,29 +98,16 @@ loadData = function(cen){
   ts5 <<- subset (ts5, select = -X)
 }
 
-parseDF = function(df,chosen){
-  data = df
-  removed = data[chosen,]
-  data = data[- chosen,]
-  res = rbind(data,removed)
-  row.names(res) <- NULL
-  return(res)
-}
-
-MultivariateModel = function(cen,pmodel,day){
+MultivariateModel = function(cen,model,week){
   loadData(cen)
   # Create Dataframe for Prediction Storage
   preds <- data.frame(matrix(ncol = 8, nrow = 0))
   # Name the Columns
   colnames(preds) <- c('ts','v1','v2','v3','v4','v5','v6','v7')
   
-  days = getWeek(day)
-  
-  # Holdout based on selected week
-  allIndex = c(1:nrow(dates))
-  semanaEsc = c(days$initial:days$final) #101-107
-  tr = allIndex[-semanaEsc]
-  ts = semanaEsc
+  H = Holdout(week)
+  print(H$tr)
+  print(H$ts)
   
   for (t in 1:length(timeSeries)){
     currentTS = timeSeries[t]
@@ -93,9 +121,10 @@ MultivariateModel = function(cen,pmodel,day){
     )
     
     # Creating the Model and making the predictions
-    M=fit(target,data[tr,],model=pmodel)
-    Pred=predict(M,data[ts,])
+    M=fit(target,data[H$tr,],model=model)
+    Pred=predict(M,data[H$ts,])
     preds[nrow(preds) + 1,] = c(timeSeries[t],Pred[1],Pred[2],Pred[3],Pred[4],Pred[5],Pred[6],Pred[7])
+    #plot(M)
   }
   print(preds)
 }
@@ -111,26 +140,29 @@ UnivariateModel = function(cen,model,week){
   # Name the Columns
   colnames(preds) <- c('ts','v1','v2','v3','v4','v5','v6','v7')
   
-
-  if(model %in% models_forecast){
-    for (t in 1:length(timeSeries)){
-      currentTS = timeSeries[t]
-      switch(  
-        currentTS,  
-        "all"= {data=ts1},
-        "female"= {data=ts2},
-        "male"= {data=ts3},
-        "young"= {data=ts4},
-        "adult"= {data=ts5},
-      )
-      
-      d1 = data[,1] # coluna target
-      L = length(d1)
-      K=7
-      Test = K
-      
-      data = parseDF(data,week)
-      H=holdout(data[,1],ratio=7,mode="order")
+  residuals = c()
+  
+  for (t in 1:length(timeSeries)){
+    currentTS = timeSeries[t]
+    switch(  
+      currentTS,  
+      "all"= {data=ts1},
+      "female"= {data=ts2},
+      "male"= {data=ts3},
+      "young"= {data=ts4},
+      "adult"= {data=ts5},
+    )
+    
+    d1 = data[,1] # coluna target
+    L = length(d1)
+    K=7
+    Test = K
+    
+    H = Holdout(week)
+    print(H$tr)
+    print(H$ts)
+    
+    if(model %in% models_forecast){
       dtr = ts(d1[H$tr],frequency=K)
       switch(  
         model,  
@@ -142,94 +174,83 @@ UnivariateModel = function(cen,model,week){
       Pred = forecast(M,h=length(H$ts))$mean[1:Test]
       preds[nrow(preds) + 1,] = c(timeSeries[t],Pred[1],Pred[2],Pred[3],Pred[4],Pred[5],Pred[6],Pred[7])
       
-    }
-    print(preds)
-    return(preds)
-  }else{
-    for (t in 1:length(timeSeries)){
-      currentTS = timeSeries[t]
-      switch(  
-        currentTS,  
-        "all"= {data=ts1},
-        "female"= {data=ts2},
-        "male"= {data=ts3},
-        "young"= {data=ts4},
-        "adult"= {data=ts5},
-      )
-      
-      data = parseDF(data,week)
-      
-      d1 = data[,1] # coluna target
-      L = length(d1)
-      K=7
-      Test = K
-      
+    }else{
       timelags = c(1:7)
       D = CasesSeries(d1,timelags)
-      
-      H=holdout(data[,1],ratio=7,mode="order")
       
       M = fit(y~.,D[H$tr,],model=model)
       Pred = lforecast(M,D,start=(length(H$tr)+1),Test)
       preds[nrow(preds) + 1,] = c(timeSeries[t],Pred[1],Pred[2],Pred[3],Pred[4],Pred[5],Pred[6],Pred[7])
-    }
-    print(preds)
-    return(preds)
-  }
+      }
 
+  }
+  print(preds)
+  return(preds)
 }
 
 # Best Hybrid Model (HW + LM)
-HybridModel = function(day){
-  days = getWeek(day)
+HybridModel = function(cen,week,model_uni,model_multi){
+  # Load the Datasets
+  loadData(cen)
   
   # Create Dataframe for Prediction Storage
   preds <- data.frame(matrix(ncol = 8, nrow = 0))
-  predsUI <- data.frame(matrix(ncol = 8, nrow = 0))
+  
   # Name the Columns
   colnames(preds) <- c('ts','v1','v2','v3','v4','v5','v6','v7')
-  colnames(predsUI) <- c("Time Series", as.array(days$week))
   
-  
-  
-  # Holdout based on selected week
-  allIndex = c(1:nrow(dates))
-  semanaEsc = c(days$initial:days$final) #101-107
-  tr = allIndex[-semanaEsc]
-  ts = semanaEsc
-  
-  K=7
-  Test=K # H, the number of multi-ahead steps, adjust if needed
-  S=K # step jump: set in this case to 7 predictions
+  H = Holdout(week)
+  print(H$tr)
+  print(H$ts)
  
   
   for (t in 1:length(timeSeries)){
     currentTS = timeSeries[t]
     switch(  
       currentTS,  
-      "all"= {data=ts1},
-      "female"= {data=ts2},
-      "male"= {data=ts3},
-      "young"= {data=ts4},
-      "adult"= {data=ts5},
-    ) 
-    cat("TS:",currentTS,"\n")
+      "all"= {data=ts1; target = all~.},
+      "female"= {data=ts2; target = female~.},
+      "male"= {data=ts3; target = male~.},
+      "young"= {data=ts4; target = young~.},
+      "adult"= {data=ts5; target = adult~.},
+    )
+    d1 = data[,1] # coluna target
+    L = length(d1)
+    K=7
+    Test = K
     
-    d1 = data[,1] # 1ª coluna
-    L = length(d1) # 257
-    
-    # rminer:
-    timelags=c(1:7) # 1 previous day until 7 previous days
-    D=CasesSeries(d1,timelags) # note: nrow(D) is smaller by max timelags than length(d1)
-    
-    YR=diff(range(d1)) # global Y range, use the same range for the NMAE calculation in all iterations
-    
-    
-    dtr = ts(d1[tr],frequency=K)
-    M = suppressWarnings(HoltWinters(dtr)) 
-    PrevPred = M$fitted[1:nrow(M$fitted)]
-    Pred = forecast(M,h=length(ts))$mean[1:Test]
-    
+    if(model_uni %in% models_forecast){
+      
+      dtr = ts(d1[H$tr],frequency=K)
+      switch(  
+        model_uni,  
+        "HW"= {M <<- suppressWarnings(HoltWinters(dtr)); PrevPred <<- M$fitted[1:nrow(M$fitted)]},
+        "Arima"= {M <<- suppressWarnings(auto.arima(dtr)); PrevPred <<- fitted(M)},
+        "NN"= {M <<- suppressWarnings(nnetar(dtr,p=7)); PrevPred <<- M$fitted[8:length(M$fitted)]},
+        "ETS"= {M <<- suppressWarnings(ets(dtr)); PrevPred <<- fitted(M)},
+      ) 
+      Pred <<- forecast(M,h=length(H$ts))$mean[1:Test]
+      
+    }else{
+      
+      # Creating the Model and making the predictions
+      M <<- fit(target,data[H$tr,],model=model_uni)
+      Pred <<- predict(M,data[H$ts,])
+      
+      
+      # # rminer:
+      # timelags=c(1:7) # 1 previous day until 7 previous days
+      # D=CasesSeries(d1,timelags) # note: nrow(D) is smaller by max timelags than length(d1)
+      # 
+      # YR=diff(range(d1)) # global Y range, use the same range for the NMAE calculation in all iterations
+      # 
+      # 
+      # dtr = ts(d1[tr],frequency=K)
+      # M = suppressWarnings(HoltWinters(dtr)) 
+      # PrevPred = M$fitted[1:nrow(M$fitted)]
+      # Pred = forecast(M,h=length(ts))$mean[1:Test]
+    }
+
     # Creating a Dataframe with all univariate predictions
     uniPred = c(PrevPred,Pred)
     HD = cbind(uniPred=uniPred,ts1[1:length(uniPred),2:5],y=d1[1:length(uniPred)])
@@ -240,21 +261,13 @@ HybridModel = function(day){
     RSIZE=TRSIZE+LPRED
     
     # Creating Multivariate Model with new Dataframe
-    M2=fit(y~.,HD[1:TRSIZE,],model="lm") # create forecasting model
+    M2=fit(y~.,HD[1:TRSIZE,],model=model_multi) # create forecasting model
     Pred2=predict(M2,HD[(TRSIZE+1):(RSIZE),]) # multi-step ahead forecasts
-    mae=mmetric(y=d1[ts],x=Pred2,metric="MAE",val=YR)
-    nmae=mmetric(y=d1[ts],x=Pred2,metric="NMAE",val=YR)
-    
-    cat("Predictions:",Pred2,"\n")
-    cat("MAE:",mae,"\n")
-    cat("NMAE:",nmae,"\n")
     
     preds[nrow(preds) + 1,] = c(timeSeries[t],Pred2[1],Pred2[2],Pred2[3],Pred2[4],Pred2[5],Pred2[6],Pred2[7])
-    predsUI[nrow(predsUI) + 1,] = c(timeSeries[t],Pred2[1],Pred2[2],Pred2[3],Pred2[4],Pred2[5],Pred2[6],Pred2[7])
   }
-  res <- list(preds = preds, predsUI = predsUI)
-  print(res)
-  return(res)
+  print(preds)
+  return(preds)
 }
 
 # --------------------------------------------- Optimization -------------------------------------------------------
@@ -335,6 +348,7 @@ hillClimbing = function(preds){
   res = list(ts1=best[1:7],ts2=best[8:14],ts3=best[15:21],ts4=best[22:28],ts5=best[29:35])
   return(res)
 }
+
 
 
 
