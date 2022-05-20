@@ -8,10 +8,13 @@ rminer <- c("lm","mlpe","naive","ctree","mlp","randomForest","mr","rvm","ksvm")
 forecast <- c("HW","Arima","NN","ETS")
 
 scenarios <- c("Scenario 1 (Untouched)","Scenario 2 (No outliers)","Scenario 3 (+ holidays)")
+scenarios_list <- list("Scenario 1 (Untouched)"=1,"Scenario 2 (No outliers)"=2,"Scenario 3 (+ holidays)"=3)
 
 opt_models <- c("HillClimb","MonteCarlo","Tabu","Sann")
 
 objs <- c("Objetivo 1","Objetivo 2", "Objetivo 3")
+
+models <- list("Hybrid Model"=1,"Univariate Model"=2,"Multivariate Model"=3)
 
 
 ui <- fluidPage(theme = shinytheme("flatly"),
@@ -22,6 +25,11 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                       sidebarLayout(
                                         sidebarPanel(
                                           tabsetPanel(id="tabPages",
+                                                      tabPanel("Best Solution",
+                                                               h3("Prediction (Best Solution)"),
+                                                               selectInput("week_best",h5("Week"),choices = weeks),
+                                                               actionButton("predict_btn_best", label = "Run Model"),
+                                                      ),
                                                       tabPanel("Hybrid",
                                                                h3("Prediction (Hybrid Modeling)"),
                                                                selectInput("week_hybrid",h5("Week"),choices = weeks),
@@ -72,23 +80,41 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                             tabPanel("Predictions", 
                                                      fluidPage(
                                                        uiOutput("pred_table"),
+                                                       selectInput("pred_cb", label = h4("Predictions"), choices = timeSeries_list),
                                                        plotOutput("tsPred_plot")
                                                      )),
                                             tabPanel("Forecast", 
-                                                     plotOutput("res_plot")),
+                                                     fluidRow(
+                                                       selectInput("forecast_cb",label = h4("Time Series"),choices = timeSeries_list),
+                                                       selectInput("forecast_cb_window",label = h4("Sample Size"),choices = c(30,50,100)),
+                                                     ),
+                                                     textOutput("forecast_plot_name"),
+                                                     plotOutput("fcast_plot")),
                                           )
                                         )
                                       ),
                                     )),
                            tabPanel("Models",
-                                    includeMarkdown("./markdown/teste.md")
+                                    includeMarkdown("./markdown/models.md")
                                     ),
-                           tabPanel("Data"),
-                           tabPanel("Scenarios")
+                           tabPanel("Data",
+                                    dataTableOutput("all_data")),
+                           tabPanel("Scenarios",
+                                    includeMarkdown("./markdown/scenarios.md")),
+                           tabPanel("Results",
+                                    fluidPage(
+                                      selectInput("results_cen_cb",label = h4("Scenario"),choices = scenarios_list),
+                                      selectInput("results_model_cb",label = h4("Model"),choices = models),
+                                      selectInput("results_ts_cb",label = h4("Time Series"),choices = timeSeries_list),
+                                      actionButton("load_results_btn","Load Results"),
+                                      dataTableOutput("results_data")
+                                    ))
                 ),
 )
 
 server = function(input,output,session){
+  
+  output$all_data <- renderDataTable(all_data)
 
   # Update Model Lists based on Package Choice
   
@@ -123,6 +149,7 @@ server = function(input,output,session){
     opt_model = input$optmodel_hybrid
     
     
+    
     # Scenario value assignment
     if(input$cen_multi == "Scenario 1 (Untouched)"){
       cen = "cen1"
@@ -133,18 +160,25 @@ server = function(input,output,session){
     }
     
     # Forecast
-    preds = HybridModel(cen,week,uni_model,multi_model)
-    res = hillClimbing(preds)
+    res_model = HybridModel(cen,week,uni_model,multi_model)
+    preds <<- res_model$preds
+    
+    all_prevs <<- res_model$all_prevs
+    female_prevs <<- res_model$female_prevs
+    male_prevs <<- res_model$male_prevs
+    young_prevs <<- res_model$young_prevs
+    adult_prevs <<- res_model$adult_prevs
+    
+    res = Optimization(opt_model,preds)
+    
     
     # Output
     output$ot_table = renderTable(res)
     output$pred_table = renderTable(preds)
-    output$tsPred_plot = renderPlot({
-      barplot(
-        as.numeric(preds[1,][2:8]),
-        names = c("D","S","T","Q","Q","S","S")
-      )
-    })
+    
+    preds_all = as.numeric(unlist(preds[1,])[-1])
+    plotPred(preds_all)
+    plotForecast(all_prevs,preds_all)
   },ignoreInit = TRUE)
   
   # Univariate Model
@@ -166,19 +200,25 @@ server = function(input,output,session){
     }
     
     # Forecast
-    preds = UnivariateModel(cen,uni_model,week)
-    res = hillClimbing(preds)
+    res_model = UnivariateModel(cen,uni_model,week)
+    preds <<- res_model$preds
+    
+    all_prevs <<- res_model$all_prevs
+    female_prevs <<- res_model$female_prevs
+    male_prevs <<- res_model$male_prevs
+    young_prevs <<- res_model$young_prevs
+    adult_prevs <<- res_model$adult_prevs
+    
+    res = Optimization(opt_model,preds)
+    
     
     # Output
     output$ot_table = renderTable(res)
     output$pred_table = renderTable(preds)
-    output$tsPred_plot = renderPlot({
-      barplot(
-        as.numeric(preds[1,][2:8]),
-        names = c("D","S","T","Q","Q","S","S")
-        )
-    })
-    output$res_plot = renderPlot({residual_plot})
+    
+    preds_all = as.numeric(unlist(preds[1,])[-1])
+    plotPred(preds_all)
+    plotForecast(all_prevs,preds_all)
   },ignoreInit = TRUE)
   
   # Multivariate Model
@@ -187,6 +227,7 @@ server = function(input,output,session){
     solutionType = "multi"
     multi_model = input$multimodel_multi
     opt_model = input$optmodel_multi
+    obj_multi = input$obj_multi
     
     # Scenario value assignment 
     if(input$cen_multi == "Scenario 1 (Untouched)"){
@@ -198,18 +239,57 @@ server = function(input,output,session){
     }
     
     # Forecast
-    preds = MultivariateModel(cen,multi_model,week)
-    res = hillClimbing(preds)
+    res_model = MultivariateModel(cen,multi_model,week)
+    preds <<- res_model$preds
+    
+    all_prevs <<- res_model$all_prevs
+    female_prevs <<- res_model$female_prevs
+    male_prevs <<- res_model$male_prevs
+    young_prevs <<- res_model$young_prevs
+    adult_prevs <<- res_model$adult_prevs
+    
+    res = Optimization(opt_model,preds)
+    
     
     # Output
     output$ot_table = renderTable(res)
     output$pred_table = renderTable(preds)
-    output$tsPred_plot = renderPlot({
-      barplot(
-        as.numeric(preds[1,][2:8]),
-        names = c("D","S","T","Q","Q","S","S")
-      )
-    })
+    
+    preds_all = as.numeric(unlist(preds[1,])[-1])
+    plotPred(preds_all)
+    plotForecast(all_prevs,preds_all)
+  },ignoreInit = TRUE)
+  
+  
+  # Best Solution (HW + lm)
+  observeEvent(input$predict_btn_best,{
+    # Getting the variables 
+    solutionType = "hybrid"
+    cen = "cen1"
+    multi_model = "lm"
+    uni_model = "HW"
+    opt_model = "HillClimb"
+    
+    # Forecast
+    res_model = HybridModel(cen,week,uni_model,multi_model)
+    preds <<- res_model$preds
+    
+    all_prevs <<- res_model$all_prevs
+    female_prevs <<- res_model$female_prevs
+    male_prevs <<- res_model$male_prevs
+    young_prevs <<- res_model$young_prevs
+    adult_prevs <<- res_model$adult_prevs
+    
+    res = Optimization(opt_model,preds)
+    
+    
+    # Output
+    output$ot_table = renderTable(res)
+    output$pred_table = renderTable(preds)
+    
+    preds_all = as.numeric(unlist(preds[1,])[-1])
+    plotPred(preds_all)
+    plotForecast(all_prevs,preds_all)
   },ignoreInit = TRUE)
   
   output$models_markdown <- renderUI({
@@ -236,6 +316,98 @@ server = function(input,output,session){
     week <<- getWeek(as.numeric(input$week_multi))
     print(week)
   })
+  
+  # Best Tab
+  observeEvent(input$week_best,{
+    week <<- getWeek(as.numeric(input$week_best))
+    print(week)
+  })
+  
+  
+  
+  observeEvent(input$forecast_cb,{
+    preds = as.numeric(unlist(preds[input$forecast_cb,])[-1])
+    currentTS = input$forecast_cb
+    switch(  
+      currentTS,  
+      "1"= {prevs = all_prevs},
+      "2"= {prevs = female_prevs},
+      "3"= {prevs = male_prevs},
+      "4"= {prevs = young_prevs},
+      "5"= {prevs = adult_prevs},
+    )
+    print(prevs)
+    print(preds)
+    plotForecast(prevs,preds)
+
+  },ignoreInit = TRUE)
+  
+  observeEvent(input$pred_cb,{
+    preds = as.numeric(unlist(preds[input$pred_cb,])[-1])
+    plotPred(preds)
+    
+  },ignoreInit = TRUE)
+  
+  observeEvent(input$results_cen_cb,{
+    print(input$results_model_cb)
+    switch(
+      input$results_cen_cb,
+      "1"= {results_cen <<- "Cenario 1"},
+      "2"= {results_cen <<- "Cenario 2"},
+      "3"= {results_cen <<- "Cenario 3"}
+    )
+    #loadResults(as.numeric(results_cen), results_model ,as.numeric(input$results_ts_cb))
+  })
+  
+  observeEvent(input$results_model_cb,{
+    print(input$results_model_cb)
+    switch(  
+      input$results_model_cb,  
+      "1"= {results_model <<- "Modelos Hibridos"},
+      "2"= {results_model <<- "Modelos Multivariados"},
+      "3"= {results_model <<- "Modelos Univariados"}
+    )
+    #loadResults(as.numeric(results_cen), results_model ,as.numeric(input$results_ts_cb))
+  })
+  
+  # observeEvent(input$results_ts_cb,{
+  #   loadResults(as.numeric(results_cen), results_model ,as.numeric(input$results_ts_cb))
+  # },ignoreInit = TRUE)
+  
+  observeEvent(input$load_results_btn,{
+    results_data = loadResults(results_cen, results_model ,as.numeric(input$results_ts_cb))
+    output$results_data <- renderDataTable(results_data)
+  },ignoreInit = TRUE)
+  
+  
+  
+  
+  
+  # Plotting Functions 
+  
+  plotPred = function(preds){
+    output$tsPred_plot = renderPlot({
+      barplot(
+        preds,
+        names = c(1:7)
+      )
+    })
+  }
+  
+  
+  plotForecast = function(prev,pred){
+    output$fcast_plot = renderPlot({
+      res_createDF = createForecastDataFrame(prev,pred)
+      fcastDF = res_createDF$df
+      max_index = res_createDF$max_index
+      fcastDF$highlight <- ifelse(fcastDF$values %in% pred, "blue", "black")
+      window_size = as.numeric(input$forecast_cb_window)
+      length_ultimos = (max_index - window_size):max_index
+      ggplot(fcastDF[length_ultimos,], aes(x = index, y = values, colour = highlight, group = 1)) +
+        geom_line() +
+        scale_colour_identity(pred)
+    })
+  }
 }
 
 shinyApp(ui,server)

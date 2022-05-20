@@ -5,10 +5,9 @@ account: guedes
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6283481
-bundleId: 5904984
+bundleId: 5925484
 url: https://guedes.shinyapps.io/shiny/
-when: 1652498405.79812
-lastSyncTime: 1652498405.79812
+when: 1653019133.54025
+lastSyncTime: 1653019133.54026
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: app2.R
