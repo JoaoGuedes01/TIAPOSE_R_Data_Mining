@@ -103,10 +103,10 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                     includeMarkdown("./markdown/scenarios.md")),
                            tabPanel("Results",
                                     fluidPage(
-                                      selectInput("results_cen_cb",label = h4("Scenario"),choices = scenarios_list),
-                                      selectInput("results_model_cb",label = h4("Model"),choices = models),
-                                      selectInput("results_ts_cb",label = h4("Time Series"),choices = timeSeries_list),
-                                      actionButton("load_results_btn","Load Results"),
+                                      tags$div(selectInput("results_cen_cb",label = h4("Scenario"),choices = scenarios_list),style="display:inline-block"),
+                                      tags$div(selectInput("results_model_cb",label = h4("Model"),choices = models),style="display:inline-block"),
+                                      tags$div(selectInput("results_ts_cb",label = h4("Time Series"),choices = timeSeries_list),style="display:inline-block"),
+                                      tags$div(actionButton("load_results_btn","Load Results"),style="display:inline-block"),
                                       dataTableOutput("results_data")
                                     ))
                 ),
