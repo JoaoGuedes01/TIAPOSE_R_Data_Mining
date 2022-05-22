@@ -85,8 +85,8 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                      )),
                                             tabPanel("Forecast", 
                                                      fluidRow(
-                                                       selectInput("forecast_cb",label = h4("Time Series"),choices = timeSeries_list),
-                                                       selectInput("forecast_cb_window",label = h4("Sample Size"),choices = c(30,50,100)),
+                                                       tags$div(selectInput("forecast_cb",label = h4("Time Series"),choices = timeSeries_list),style="display:inline-block"),
+                                                       tags$div(selectInput("forecast_cb_window",label = h4("Sample Size"),choices = c(30,50,100)),style="display:inline-block"),                    
                                                      ),
                                                      textOutput("forecast_plot_name"),
                                                      plotOutput("fcast_plot")),
@@ -99,6 +99,16 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                     ),
                            tabPanel("Data",
                                     dataTableOutput("all_data")),
+                           tabPanel("EDA",
+                                    tags$head(tags$style(HTML("
+                                    .main-container {
+                                    width: 100% !important;
+                                    max-width: 100% !important;
+                                 }
+
+                               "))),
+                                    includeCSS("./HTML/report.html")
+                                    ),
                            tabPanel("Scenarios",
                                     includeMarkdown("./markdown/scenarios.md")),
                            tabPanel("Results",
