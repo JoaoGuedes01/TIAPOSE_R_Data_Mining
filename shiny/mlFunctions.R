@@ -81,7 +81,7 @@ loadResults = function(cen,model,ts){
   #results_df <<- subset (results_df, select = -X)
 }
 
-a = loadResults("Cenario 1", "Modelos Hibridos",2)
+#a = loadResults("Cenario 1", "Modelos Hibridos",2)
 
 
 loadData = function(cen){
