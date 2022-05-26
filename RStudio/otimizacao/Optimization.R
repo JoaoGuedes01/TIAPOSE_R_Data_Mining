@@ -24,38 +24,12 @@ pred = c(all, female, male, young, adult)
 # variables
 D = 35 #dimension
 DW = 7 #days of the week
-cost = c(rep(350,DW),rep(150,DW),rep(100,DW),rep(100,DW),rep(120,DW))
-solution = sample(c(0,1), replace=TRUE, size=D)
+Runs = 100 # number of searches
+cost = c(rep(350,DW),rep(150,DW),rep(100,DW),rep(100,DW),rep(120,DW)) #time series cost
+solution = sample(c(0,1), replace=TRUE, size=D) #initial solution
+lower = rep(0,D) # lower bounds
+upper = rep(1,D) #  upper bounds
 
-
-# evaluation function:
-profit1 <- function(x) 
-{ 
-  x = round(x)
-  p = sum(x*(vendas-cost))
-  return(p)
-}
-
-profit2 <- function(x) 
-{ 
-  x = round(x)
-  p = sum(x*(vendas-cost))
-  
-  #promotions limits
-  if(sum(x==1)>10){
-    p = -99999
-  }
-  return(p)
-}
-
-profit3 <- function(x) 
-{ 
-  x = round(x)
-  p = sum(x*(vendas-cost))
-  v = sum(x==1)
-  s = p/v
-  return(s)
-}
 
 #Sales function
 sales <- function()
@@ -85,50 +59,99 @@ sales <- function()
 }
 
 vendas=sales()
-lower = rep(0,D) # lower bounds
-upper = rep(1,D) #  upper bounds
+
+
+# evaluation function:
+#O1
+profit1 <- function(x) 
+{ 
+  x = round(x)
+  p = sum(x*(vendas-cost))
+  return(p)
+}
+
+#O2 death penalty
+profit21 <- function(x) 
+{ 
+  x = round(x)
+  p = sum(x*(vendas-cost))
+  
+  #promotions limits
+  if(sum(x==1)>10){
+    p = -99999
+  }
+  return(p)
+}
+
+#O2 repair
+profit22 <- function(x) 
+{ 
+  x = round(x)
+  x = repairSolution(x)
+  p = sum(x*(vendas-cost))
+  
+  return(p)
+}
+
+
+#Repair Function
+repairSolution <- function(x) {
+  n = 0
+  for(i in 1:length(x)){
+    if(x[i] == 1 & n < 10)
+      n = n + 1
+    else 
+      x[i] = 0  
+  }
+  return(x)
+}
+
+#O3
+profit3 <- function(x) 
+{ 
+  x = round(x)
+  p = sum(x*(vendas-cost))
+  v = sum(x==1)
+  if(v==0) v=35
+  s = p/v
+  return(s)
+}
 
 
 #Optimization hill climbing
 hill <- function(evalF) 
 {
-  N = 1000 # 1000 searches
-  REPORT = N/20 # report results
-  
+  REPORT = Runs/20 # report results
   
   # slight change of a real par under a normal u(0,0.5) function:
   rchange1=function(par,lower,upper) # change for hclimbing
   { hchange(par,lower=lower,upper=upper,rnorm,mean=0,sd=0.5,round=TRUE) }
   
   HC = hclimbing(par=solution,fn=evalF,change=rchange1,lower=lower,upper=upper,type="max",
-                 control=list(maxit=N,REPORT=REPORT,digits=2))
+                 control=list(maxit=Runs,REPORT=REPORT,digits=2))
   cat("best solution:",HC$sol,"evaluation function",HC$eval,"\n")
+  return(HC$eval)
 }
 
 
 #Optimization montecarlo
 montecarlo <- function(evalF) 
 {
-  N = 100000 # number of searches
   
   # monte carlo search 
-  MC=mcsearch(fn=evalF,lower=lower,upper=upper,N=N,type="max")
+  MC=mcsearch(fn=evalF,lower=lower,upper=upper,N=Runs,type="max")
   cat("best solution:",round(MC$sol),"evaluation function",MC$eval,"\n")
+  return(MC$eval)
 }
 
 
 #Optimization sann
 sann <- function(evalF) 
 {
-  Runs = 100
   
   best= -Inf # - infinity
   for(i in 1:Runs)
   {
-    #rchange1=function(par) # change for hclimbing
-    #{ hchange(par,lower=lower ,upper=upper, rnorm, mean=0, sd=1, round=TRUE) }
-    
-    
     rchange2=function(par) # change for hclimbing
     { hchange(par,lower=lower,upper=upper,rnorm,mean=0,sd=0.5,round=TRUE) }
     
@@ -138,6 +161,7 @@ sann <- function(evalF)
     if(L>best) { BESTSA=sa; best=L;}
   }
   cat("Best Solution: ",BESTSA$par,"profit:",evalF(BESTSA$par),"\n")
+  return(evalF(BESTSA$par))
 }
 
 
@@ -147,27 +171,58 @@ tabu <- function(evalF)
   LIM = 1 # upper and lower bound
   lower = 0
   upper = LIM
-  size = D
-  N = 100 # number of iterations
   
-  s=tabuSearch(size,iters=N,objFunc=evalF,config=solution,verbose=TRUE)
+  s=tabuSearch(size = D,iters=Runs,objFunc=evalF,config=solution,verbose=TRUE)
   b=which.max(s$eUtilityKeep) # best index
   bs=s$configKeep[b,]
   cat("best solution:",bs,"evaluation function",s$eUtilityKeep[b],"\n")
+  return(s$eUtilityKeep[b])
+}
+
+#Runs each model n times for comparison
+RunAll = function(eval, n){
+  
+  hillV=c()
+  monteV=c()
+  sannV=c()
+  tabuV=c()
+  
+  for (i in 1:n) {
+    h = hill(eval)
+    hillV <- c(hillV, h)
+    
+    m = montecarlo(eval)
+    monteV <- c(monteV, m)
+    
+    s = sann(eval)
+    sannV <- c(sannV, s)
+    
+    t = tabu(eval)
+    tabuV <- c(tabuV, t)
+  }
+  
+  hill1=sum(hillV)/n
+  monte1=sum(monteV)/n
+  sann1=sum(sannV)/n
+  tabu1=sum(tabuV)/n
+  
+  cat("\nHill O1:", hill1)
+  cat("\nMontecarlo O1:", monte1)
+  cat("\nSANN O1:", sann1)
+  cat("\nTabu O1:", tabu1)
 }
 
 
 #Runs
-cat("\nObjetivo 1:\n")
 #H1 = hill(profit1)
-#H2 = hill(profit2)
+#H2 = hill(profit22)
 #H3 = hill(profit3)
 #S1 = sann(profit1)
-#S2 = sann(profit2)
+#S2 = sann(profit22)
 #S3 = sann(profit3)
 #M1 = montecarlo(profit1)
-#M2 = montecarlo(profit2)
+#M2 = montecarlo(profit22)
 #M3 = montecarlo(profit3)
 #T1 = tabu(profit1)
-#T2 = tabu(profit2)
+#T2 = tabu(profit22)
 #T3 = tabu(profit3)
