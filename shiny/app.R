@@ -28,7 +28,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                       tabPanel("Best Solution",
                                                                h3("Prediction (Best Solution)"),
                                                                selectInput("week_best",h5("Week"),choices = weeks),
+                                                               selectInput("obj_best",label = h4("Optimization Objective"), choices = objs),
                                                                actionButton("predict_btn_best", label = "Run Model"),
+                                                               htmlOutput("best_model_output")
                                                       ),
                                                       tabPanel("Hybrid",
                                                                h3("Prediction (Hybrid Modeling)"),
@@ -76,7 +78,18 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                         mainPanel(
                                           tabsetPanel(
                                             tabPanel("Otimization", 
-                                                     uiOutput("ot_table")),
+                                                     h3(textOutput("all_opt_label")),
+                                                     uiOutput("ot_table_all"),
+                                                     h3(textOutput("female_opt_label")),
+                                                     uiOutput("ot_table_female"),
+                                                     h3(textOutput("male_opt_label")),
+                                                     uiOutput("ot_table_male"),
+                                                     h3(textOutput("young_opt_label")),
+                                                     uiOutput("ot_table_young"),
+                                                     h3(textOutput("adult_opt_label")),
+                                                     uiOutput("ot_table_adult"),
+                                                     h3(textOutput("opt_total_profit")),
+                                                     ),
                                             tabPanel("Predictions", 
                                                      fluidPage(
                                                        uiOutput("pred_table"),
@@ -118,7 +131,10 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                       tags$div(selectInput("results_ts_cb",label = h4("Time Series"),choices = timeSeries_list),style="display:inline-block"),
                                       tags$div(actionButton("load_results_btn","Load Results"),style="display:inline-block"),
                                       dataTableOutput("results_data")
-                                    ))
+                                    )),
+                           tabPanel("Best Models",
+                                    includeMarkdown("./markdown/best_models.md")
+                                    )
                 ),
 )
 
@@ -157,6 +173,7 @@ server = function(input,output,session){
     multi_model = input$multimodel_hybrid
     uni_model = input$unimodel_hybrid
     opt_model = input$optmodel_hybrid
+    obj_hybrid = input$obj_hybrid
     
     
     
@@ -179,11 +196,25 @@ server = function(input,output,session){
     young_prevs <<- res_model$young_prevs
     adult_prevs <<- res_model$adult_prevs
     
-    res = Optimization(opt_model,preds)
+    res = Optimization(opt_model,preds,obj_hybrid)
     
     
-    # Output
-    output$ot_table = renderTable(res)
+    #Output
+    
+    # Output Otimization All
+    output$ot_table_all = renderTable(createOptTableDF(res,"all"))
+    output$ot_table_female = renderTable(createOptTableDF(res,"female"))
+    output$ot_table_male = renderTable(createOptTableDF(res,"male"))
+    output$ot_table_young = renderTable(createOptTableDF(res,"young"))
+    output$ot_table_adult = renderTable(createOptTableDF(res,"adult"))
+    
+    output$opt_total_profit = renderText(paste("Total Profit for the week:",res$total_profit,"€"))
+    
+    populateTableTitlesOpt()
+    
+    colnames(preds) = c("Time Series", getWeekDays(week))
+    print(preds)
+    
     output$pred_table = renderTable(preds)
     
     preds_all = as.numeric(unlist(preds[1,])[-1])
@@ -198,6 +229,7 @@ server = function(input,output,session){
     cen = input$cen_uni
     uni_model = input$unimodel_uni
     opt_model = input$optmodel_uni
+    obj_uni = input$obj_uni
     
     
     # Scenario value assignment 
@@ -219,11 +251,27 @@ server = function(input,output,session){
     young_prevs <<- res_model$young_prevs
     adult_prevs <<- res_model$adult_prevs
     
-    res = Optimization(opt_model,preds)
+    res = Optimization(opt_model,preds,obj_uni)
     
     
-    # Output
-    output$ot_table = renderTable(res)
+    #Output
+    
+    # Output Otimization All
+    output$ot_table_all = renderTable(createOptTableDF(res,"all"))
+    output$ot_table_female = renderTable(createOptTableDF(res,"female"))
+    output$ot_table_male = renderTable(createOptTableDF(res,"male"))
+    output$ot_table_young = renderTable(createOptTableDF(res,"young"))
+    output$ot_table_adult = renderTable(createOptTableDF(res,"adult"))
+    
+    output$opt_total_profit = renderText(paste("Total Profit for the week:",res$total_profit,"€"))
+    
+    
+    
+    populateTableTitlesOpt()
+    
+    colnames(preds) = c("Time Series", getWeekDays(week))
+    print(preds)
+    
     output$pred_table = renderTable(preds)
     
     preds_all = as.numeric(unlist(preds[1,])[-1])
@@ -238,6 +286,7 @@ server = function(input,output,session){
     multi_model = input$multimodel_multi
     opt_model = input$optmodel_multi
     obj_multi = input$obj_multi
+    print(obj_multi)
     
     # Scenario value assignment 
     if(input$cen_multi == "Scenario 1 (Untouched)"){
@@ -258,17 +307,56 @@ server = function(input,output,session){
     young_prevs <<- res_model$young_prevs
     adult_prevs <<- res_model$adult_prevs
     
-    res = Optimization(opt_model,preds)
+    res = Optimization(opt_model,preds,obj_multi)
     
+    #Output
     
-    # Output
-    output$ot_table = renderTable(res)
+    # Output Otimization All
+    output$ot_table_all = renderTable(createOptTableDF(res,"all"))
+    output$ot_table_female = renderTable(createOptTableDF(res,"female"))
+    output$ot_table_male = renderTable(createOptTableDF(res,"male"))
+    output$ot_table_young = renderTable(createOptTableDF(res,"young"))
+    output$ot_table_adult = renderTable(createOptTableDF(res,"adult"))
+    
+    output$opt_total_profit = renderText(paste("Total Profit for the week:",res$total_profit,"€"))
+    
+    populateTableTitlesOpt()
+    
+    colnames(preds) = c("Time Series", getWeekDays(week))
+    print(preds)
+    
     output$pred_table = renderTable(preds)
     
     preds_all = as.numeric(unlist(preds[1,])[-1])
     plotPred(preds_all)
     plotForecast(all_prevs,preds_all)
   },ignoreInit = TRUE)
+  
+  populateTableTitlesOpt = function(){
+    output$all_opt_label = renderText("All")
+    output$female_opt_label = renderText("Female")
+    output$male_opt_label = renderText("Male")
+    output$young_opt_label = renderText("Young")
+    output$adult_opt_label = renderText("Adult")
+  }
+  
+  createOptTableDF = function(res_list,ts){
+    
+    res = res_list
+    cona <- data.frame(matrix(ncol = 8, nrow = 0))
+    colnames(cona) <- c("Value", getWeekDays(week))
+    
+    sol_proc <- ifelse(res$sols_res[[ts]]==0, "No", "Yes")
+    cona[1,] = c("Solution",sol_proc)
+
+    cona[2,] = c("Sales",res$sales_res[[ts]])
+    cona[3,] = c("Cost",res$cost_res[[ts]])
+    cona[4,] = c("Profit",res$profit_res[[ts]])
+    
+    
+    
+    return(cona)
+  }
   
   
   # Best Solution (HW + lm)
@@ -278,10 +366,16 @@ server = function(input,output,session){
     cen = "cen1"
     multi_model = "lm"
     uni_model = "HW"
-    opt_model = "HillClimb"
+    opt_model = "Tabu"
+    #opt_model = "HillClimb"
+    obj_best= input$obj_best
+    
+    cona = paste(solutionType, cen, multi_model, uni_model, opt_model, sep = "<br/>")
+    
+    output$best_model_output = renderUI({HTML(cona)})
     
     # Forecast
-    res_model = HybridModel(cen,week,uni_model,multi_model)
+    res_model = BestModel(week)
     preds <<- res_model$preds
     
     all_prevs <<- res_model$all_prevs
@@ -290,11 +384,25 @@ server = function(input,output,session){
     young_prevs <<- res_model$young_prevs
     adult_prevs <<- res_model$adult_prevs
     
-    res = Optimization(opt_model,preds)
+    res = Optimization(opt_model,preds,obj_best)
     
+    #Output
+    
+    # Output Otimization All
+    output$ot_table_all = renderTable(createOptTableDF(res,"all"))
+    output$ot_table_female = renderTable(createOptTableDF(res,"female"))
+    output$ot_table_male = renderTable(createOptTableDF(res,"male"))
+    output$ot_table_young = renderTable(createOptTableDF(res,"young"))
+    output$ot_table_adult = renderTable(createOptTableDF(res,"adult"))
+    
+    output$opt_total_profit = renderText(paste("Total Profit for the week:",res$total_profit,"€"))
+    
+    populateTableTitlesOpt()
+    
+    colnames(preds) = c("Time Series", getWeekDays(week))
+    print(preds)
     
     # Output
-    output$ot_table = renderTable(res)
     output$pred_table = renderTable(preds)
     
     preds_all = as.numeric(unlist(preds[1,])[-1])
@@ -305,6 +413,8 @@ server = function(input,output,session){
   output$models_markdown <- renderUI({
     HTML(markdown::markdownToHTML(knit('./markdown/models.rmd', quiet = TRUE)))
   })
+  
+  
   
   
   # Get Selected Week
@@ -399,7 +509,7 @@ server = function(input,output,session){
     output$tsPred_plot = renderPlot({
       barplot(
         preds,
-        names = c(1:7)
+        names = getWeekDays(week)
       )
     })
   }
