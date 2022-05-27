@@ -10,7 +10,7 @@ forecast <- c("HW","Arima","NN","ETS")
 scenarios <- c("Scenario 1 (Untouched)","Scenario 2 (No outliers)","Scenario 3 (+ holidays)")
 scenarios_list <- list("Scenario 1 (Untouched)"=1,"Scenario 2 (No outliers)"=2,"Scenario 3 (+ holidays)"=3)
 
-opt_models <- c("HillClimb","MonteCarlo","Tabu","Sann")
+opt_models <- c("HillClimb","MonteCarlo","Tabu","Sann","RBGA","DeOptim","PsOptim")
 
 objs <- c("Objetivo 1","Objetivo 2", "Objetivo 3")
 
@@ -28,7 +28,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                       tabPanel("Best Solution",
                                                                h3("Prediction (Best Solution)"),
                                                                selectInput("week_best",h5("Week"),choices = weeks),
+                                                               selectInput("obj_best",label = h4("Optimization Objective"), choices = objs),
                                                                actionButton("predict_btn_best", label = "Run Model"),
+                                                               actionButton("showHelpModal", label = icon("question"), style="background-color:#00b4d8; border-color:#00b4d8"),
                                                       ),
                                                       tabPanel("Hybrid",
                                                                h3("Prediction (Hybrid Modeling)"),
@@ -44,7 +46,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                h3("Optimization"),
                                                                selectInput("optmodel_hybrid",label = h4("Optimization Model"),choices = opt_models),
                                                                selectInput("obj_hybrid",label = h4("Objetivo de Otimização"), choices = objs),
-                                                               actionButton("predict_btn_hybrid", label = "Run Model")
+                                                               actionButton("predict_btn_hybrid", label = "Run Model"),
+                                                               actionButton("showHelpModal_hybrid", label = icon("question"), style="background-color:#00b4d8; border-color:#00b4d8"),
+                                                               
                                                       ),
                                                       tabPanel("Univariate",
                                                                h3("Prediction (Univariate Modeling)"),
@@ -57,7 +61,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                h3("Optimization"),
                                                                selectInput("optmodel_uni",label = h4("Optimization Model"),choices = opt_models),
                                                                selectInput("obj_uni",label = h4("Objetivo de Otimização"), choices = objs),
-                                                               actionButton("predict_btn_uni", label = "Run Model")
+                                                               actionButton("predict_btn_uni", label = "Run Model"),
+                                                               actionButton("showHelpModal_uni", label = icon("question"), style="background-color:#00b4d8; border-color:#00b4d8"),
+                                                               
                                                       ),
                                                       tabPanel("Multivariate",
                                                                h3("Prediction (Multivariate Modeling)"),
@@ -70,13 +76,26 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                selectInput("optmodel_multi",label = h4("Optimization Model"),choices = opt_models),
                                                                selectInput("obj_multi",label = h4("Objetivo de Otimização"), choices = objs),
                                                                actionButton("predict_btn_multi", label = "Run Model"),
+                                                               actionButton("showHelpModal_multi", label = icon("question"), style="background-color:#00b4d8; border-color:#00b4d8"),
+                                                               
                                                       )
                                           ),
                                         ),
                                         mainPanel(
                                           tabsetPanel(
                                             tabPanel("Otimization", 
-                                                     uiOutput("ot_table")),
+                                                     h3(textOutput("all_opt_label")),
+                                                     uiOutput("ot_table_all"),
+                                                     h3(textOutput("female_opt_label")),
+                                                     uiOutput("ot_table_female"),
+                                                     h3(textOutput("male_opt_label")),
+                                                     uiOutput("ot_table_male"),
+                                                     h3(textOutput("young_opt_label")),
+                                                     uiOutput("ot_table_young"),
+                                                     h3(textOutput("adult_opt_label")),
+                                                     uiOutput("ot_table_adult"),
+                                                     h3(textOutput("opt_total_profit")),
+                                                     ),
                                             tabPanel("Predictions", 
                                                      fluidPage(
                                                        uiOutput("pred_table"),
@@ -85,8 +104,8 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                      )),
                                             tabPanel("Forecast", 
                                                      fluidRow(
-                                                       selectInput("forecast_cb",label = h4("Time Series"),choices = timeSeries_list),
-                                                       selectInput("forecast_cb_window",label = h4("Sample Size"),choices = c(30,50,100)),
+                                                       tags$div(selectInput("forecast_cb",label = h4("Time Series"),choices = timeSeries_list),style="display:inline-block"),
+                                                       tags$div(selectInput("forecast_cb_window",label = h4("Window Size"),choices = c(30,50,100)),style="display:inline-block"),                    
                                                      ),
                                                      textOutput("forecast_plot_name"),
                                                      plotOutput("fcast_plot")),
@@ -99,20 +118,86 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                     ),
                            tabPanel("Data",
                                     dataTableOutput("all_data")),
+                           tabPanel("EDA",
+                                    tags$head(tags$style(HTML("
+                                    .main-container {
+                                    width: 100% !important;
+                                    max-width: 100% !important;
+                                 }
+
+                               "))),
+                                    includeCSS("./HTML/report.html")
+                                    ),
                            tabPanel("Scenarios",
                                     includeMarkdown("./markdown/scenarios.md")),
                            tabPanel("Results",
                                     fluidPage(
-                                      selectInput("results_cen_cb",label = h4("Scenario"),choices = scenarios_list),
-                                      selectInput("results_model_cb",label = h4("Model"),choices = models),
-                                      selectInput("results_ts_cb",label = h4("Time Series"),choices = timeSeries_list),
-                                      actionButton("load_results_btn","Load Results"),
+                                      tags$div(selectInput("results_cen_cb",label = h4("Scenario"),choices = scenarios_list),style="display:inline-block"),
+                                      tags$div(selectInput("results_model_cb",label = h4("Model"),choices = models),style="display:inline-block"),
+                                      tags$div(selectInput("results_ts_cb",label = h4("Time Series"),choices = timeSeries_list),style="display:inline-block"),
+                                      tags$div(actionButton("load_results_btn","Load Results"),style="display:inline-block"),
                                       dataTableOutput("results_data")
-                                    ))
+                                    )),
+                           tabPanel("Best Models",
+                                    includeMarkdown("./markdown/best_models.md")
+                                    )
                 ),
 )
 
 server = function(input,output,session){
+  
+  
+  
+  observeEvent(input$showHelpModal_hybrid, {
+    showHelpModal()
+  })
+  observeEvent(input$showHelpModal_uni, {
+    showHelpModal()
+  })
+  observeEvent(input$showHelpModal_multi, {
+    showHelpModal()
+  })
+  
+  observeEvent(input$showHelpModal, {
+    showHelpModal()
+  })
+  
+  showHelpModal = function(){
+    showModal(modalDialog(
+      title = "Information",
+      fluidPage(
+        h2("Why are the weeks starting at Week 6?"),
+        h5("In order for us to train our models properly we need to have some data (i.e weeks 1-5) reserved to be train data"),
+        h2("What are de Optimization Objectives?"),
+        h3("Objective 1"),
+        h5("This Objective aims to get the highest profit disregarding the number of marketing campaigns ran."),
+        h3("Objective 2"),
+        h5("This objective aims to get the highest profit under 10 marketing campaigns across all types(Time Series) and days of the selected week."),
+        h3("Objective 3"),
+        h5("This objective aims to maximize the profits while having the lowest number of campaigns possible."),
+        h2("What is our best solution?"),
+        h4("Our best solution is divided into the 5 time series that are available"),
+        h5("(These models are backed up by our model results in the Results tab)"),
+        h3("All"),
+        h4("Hybrid Model: Holt Winters + ctree"),
+        h3("Female"),
+        h4("Hybrid Model: ETS + ctree"),
+        h3("Male"),
+        h4("Hybrid Model: lm + lm"),
+        h3("Young"),
+        h4("Hybrid Model: lm + lm"),
+        h3("Adult"),
+        h4("Univariate Model: Holt Winters"),
+        h3("Scenario"),
+        h4("Scenario 2"),
+        h5("With the Scenario 2's data we've had the best values for MAE/NMAE with all of our models"),
+        h3("Optimization Model"),
+        h4("Tabu"),
+        h5("All of the optimization models return great values but the best one, in our tests, was Tabu"),
+      ),
+      easyClose = TRUE
+    ))
+  }
   
   output$all_data <- renderDataTable(all_data)
 
@@ -147,6 +232,7 @@ server = function(input,output,session){
     multi_model = input$multimodel_hybrid
     uni_model = input$unimodel_hybrid
     opt_model = input$optmodel_hybrid
+    obj_hybrid = input$obj_hybrid
     
     
     
@@ -169,11 +255,25 @@ server = function(input,output,session){
     young_prevs <<- res_model$young_prevs
     adult_prevs <<- res_model$adult_prevs
     
-    res = Optimization(opt_model,preds)
+    res = Optimization(opt_model,preds,obj_hybrid)
     
     
-    # Output
-    output$ot_table = renderTable(res)
+    #Output
+    
+    # Output Otimization All
+    output$ot_table_all = renderTable(createOptTableDF(res,"all"))
+    output$ot_table_female = renderTable(createOptTableDF(res,"female"))
+    output$ot_table_male = renderTable(createOptTableDF(res,"male"))
+    output$ot_table_young = renderTable(createOptTableDF(res,"young"))
+    output$ot_table_adult = renderTable(createOptTableDF(res,"adult"))
+    
+    output$opt_total_profit = renderText(paste("Total Profit for the week:",res$total_profit,"€"))
+    
+    populateTableTitlesOpt()
+    
+    colnames(preds) = c("Time Series", getWeekDays(week))
+    print(preds)
+    
     output$pred_table = renderTable(preds)
     
     preds_all = as.numeric(unlist(preds[1,])[-1])
@@ -188,6 +288,7 @@ server = function(input,output,session){
     cen = input$cen_uni
     uni_model = input$unimodel_uni
     opt_model = input$optmodel_uni
+    obj_uni = input$obj_uni
     
     
     # Scenario value assignment 
@@ -209,11 +310,27 @@ server = function(input,output,session){
     young_prevs <<- res_model$young_prevs
     adult_prevs <<- res_model$adult_prevs
     
-    res = Optimization(opt_model,preds)
+    res = Optimization(opt_model,preds,obj_uni)
     
     
-    # Output
-    output$ot_table = renderTable(res)
+    #Output
+    
+    # Output Otimization All
+    output$ot_table_all = renderTable(createOptTableDF(res,"all"))
+    output$ot_table_female = renderTable(createOptTableDF(res,"female"))
+    output$ot_table_male = renderTable(createOptTableDF(res,"male"))
+    output$ot_table_young = renderTable(createOptTableDF(res,"young"))
+    output$ot_table_adult = renderTable(createOptTableDF(res,"adult"))
+    
+    output$opt_total_profit = renderText(paste("Total Profit for the week:",res$total_profit,"€"))
+    
+    
+    
+    populateTableTitlesOpt()
+    
+    colnames(preds) = c("Time Series", getWeekDays(week))
+    print(preds)
+    
     output$pred_table = renderTable(preds)
     
     preds_all = as.numeric(unlist(preds[1,])[-1])
@@ -228,6 +345,7 @@ server = function(input,output,session){
     multi_model = input$multimodel_multi
     opt_model = input$optmodel_multi
     obj_multi = input$obj_multi
+    print(obj_multi)
     
     # Scenario value assignment 
     if(input$cen_multi == "Scenario 1 (Untouched)"){
@@ -248,17 +366,54 @@ server = function(input,output,session){
     young_prevs <<- res_model$young_prevs
     adult_prevs <<- res_model$adult_prevs
     
-    res = Optimization(opt_model,preds)
+    res = Optimization(opt_model,preds,obj_multi)
     
+    #Output
     
-    # Output
-    output$ot_table = renderTable(res)
+    # Output Otimization All
+    output$ot_table_all = renderTable(createOptTableDF(res,"all"))
+    output$ot_table_female = renderTable(createOptTableDF(res,"female"))
+    output$ot_table_male = renderTable(createOptTableDF(res,"male"))
+    output$ot_table_young = renderTable(createOptTableDF(res,"young"))
+    output$ot_table_adult = renderTable(createOptTableDF(res,"adult"))
+    
+    output$opt_total_profit = renderText(paste("Total Profit for the week:",res$total_profit,"€"))
+    
+    populateTableTitlesOpt()
+    
+    colnames(preds) = c("Time Series", getWeekDays(week))
+    print(preds)
+    
     output$pred_table = renderTable(preds)
     
     preds_all = as.numeric(unlist(preds[1,])[-1])
     plotPred(preds_all)
     plotForecast(all_prevs,preds_all)
   },ignoreInit = TRUE)
+  
+  populateTableTitlesOpt = function(){
+    output$all_opt_label = renderText("All")
+    output$female_opt_label = renderText("Female")
+    output$male_opt_label = renderText("Male")
+    output$young_opt_label = renderText("Young")
+    output$adult_opt_label = renderText("Adult")
+  }
+  
+  createOptTableDF = function(res_list,ts){
+    
+    res = res_list
+    df <- data.frame(matrix(ncol = 8, nrow = 0))
+    colnames(df) <- c("Value", getWeekDays(week))
+    
+    sol_proc <- ifelse(res$sols_res[[ts]]==0, "No", "Yes")
+    df[1,] = c("Solution",sol_proc)
+
+    df[2,] = c("Sales",res$sales_res[[ts]])
+    df[3,] = c("Cost",res$cost_res[[ts]])
+    df[4,] = c("Profit",res$profit_res[[ts]])
+
+    return(df)
+  }
   
   
   # Best Solution (HW + lm)
@@ -268,10 +423,12 @@ server = function(input,output,session){
     cen = "cen1"
     multi_model = "lm"
     uni_model = "HW"
-    opt_model = "HillClimb"
+    opt_model = "Tabu"
+    #opt_model = "HillClimb"
+    obj_best= input$obj_best
     
     # Forecast
-    res_model = HybridModel(cen,week,uni_model,multi_model)
+    res_model = BestModel(week)
     preds <<- res_model$preds
     
     all_prevs <<- res_model$all_prevs
@@ -280,11 +437,25 @@ server = function(input,output,session){
     young_prevs <<- res_model$young_prevs
     adult_prevs <<- res_model$adult_prevs
     
-    res = Optimization(opt_model,preds)
+    res = Optimization(opt_model,preds,obj_best)
     
+    #Output
+    
+    # Output Otimization All
+    output$ot_table_all = renderTable(createOptTableDF(res,"all"))
+    output$ot_table_female = renderTable(createOptTableDF(res,"female"))
+    output$ot_table_male = renderTable(createOptTableDF(res,"male"))
+    output$ot_table_young = renderTable(createOptTableDF(res,"young"))
+    output$ot_table_adult = renderTable(createOptTableDF(res,"adult"))
+    
+    output$opt_total_profit = renderText(paste("Total Profit for the week:",res$total_profit,"€"))
+    
+    populateTableTitlesOpt()
+    
+    colnames(preds) = c("Time Series", getWeekDays(week))
+    print(preds)
     
     # Output
-    output$ot_table = renderTable(res)
     output$pred_table = renderTable(preds)
     
     preds_all = as.numeric(unlist(preds[1,])[-1])
@@ -295,6 +466,8 @@ server = function(input,output,session){
   output$models_markdown <- renderUI({
     HTML(markdown::markdownToHTML(knit('./markdown/models.rmd', quiet = TRUE)))
   })
+  
+  
   
   
   # Get Selected Week
@@ -389,7 +562,7 @@ server = function(input,output,session){
     output$tsPred_plot = renderPlot({
       barplot(
         preds,
-        names = c(1:7)
+        names = getWeekDays(week)
       )
     })
   }

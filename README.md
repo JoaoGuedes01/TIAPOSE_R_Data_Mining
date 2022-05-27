@@ -35,118 +35,121 @@
 - [Repositório Front-End<a name = "Repositório Front-End"></a>](#repositório-front-end)
 
 ## Introdução <a name = "intro"></a>
+No âmbito da avaliação da unidade curricular de Técnicas de Inteligência Artificial na Previsão e Otimização em Sistemas Empresariais, inserida no 2º semestre do 4º ano do Mestrado Integrado em Engenharia e Gestão de Sistemas de Informação, foi proposto a elaboração de um projeto focado no suporte à gestão de um espaço comercial alvo de um projeto piloto previamente realizado por uma empresa de TI.
+Todos os dados utilizados durante a elaboração do projeto foram fornecidos pelo docente, sendo estes provenientes do projeto piloto previamente elaborado por uma empresa não nomeada.
+A finalidade deste projeto foca-se, inicialmente,  na previsão do valor diário de entradas no espaço comercial estudado e, posteriormente, na definição de uma estratégia de marketing para os próximos sete dias, após a indicação do dia desejado.
 
-No âmbito da unidade curricular de Sistemas Baseados em Conhecimento, foi-nos proposto a conceção de um SBC implementado na linguagem Prolog, estando a mesma dividida em 2 tarefas com 2 partes cada uma, tendo por base o conceito de food delivery, tão em voga no último ano decorrente da situação pandémica que vivenciamos.
-Para tal decidimos dividir a solução em 2 endpoints:
-	º Front-end (Node.js) -> Interface gráfica para o utilizador interagir com a aplicação.
-	º Back-end (Java Spring Boot) -> Interface de Aplicação Web (Web API) destinada ao processamento dos pedidos HTTP vindos da interface. É est endpoint que executa toda a lógica e interage diretamente com o SBC em prolog.
+## Description
+
+<p>O projeto foi realizado com o auxílio da linguagem de programação R e a metodologia CRISP-DM. Como ferramentas para a execução de código utilizamos o Jupyter Notebook para a execução e desenvolvimento das fases do CRISP-DM e o Rstudio para as tarefas de Otimização e desenvolvimento da interface gráfica.</p>
+
+## CRISP-DM
+### Business Understanding
+```
+O Business Understanding trata-se da fase onde explorámos a empresa em estudo de forma a consolidar os seus objetivos e o porquê de se estar a realizar um projeto de Machine Learning.
+De seguida, baseando-se nos objetivos da empresa criamos os nossos objetivo de Data Mining onde vamos especificar exatamente o que queremos que o nosso algoritmo seja capaz de fazer, assim como definimos metas ideais para a gestão de sucesso.
+Por fim realizamos um plano de projeto de forma a situar no tempo cada uma das fases do projeto.
+No nosso caso a empresa em questão trata-se da Sony, que quer prever os ESRB_Ratings dos seus jogos antes de estes serem lançados de forma a poderem realizar campanhas de marketing de forma mais eficiente e livres de erros.
+Sendo assim o nosso objetivo de Data Mining é, dado as flags de um dado jogo, prever qual será o rating que lhe será atribuído.
+```
+### Data Understanding 
+```
+Esta fase serve para nos familiarizarmos com os dados que vamos tentar prever. Isto é essencial visto que quanto mais familiarizado estivermos com os dados melhores decisões de inclusão ou exclusão de certos parâmetros iremos fazer.
+Para realizar este estudo fizemos uma descrição de todos os dados disponibilizados onde explorámos aprofundadamente o que cada parâmetro do nosso dataset significava
+Fizemos também uma vistoria inicial dos dados ao qual chamámos Exploração e Verificação da qualidade dos dados onde verificamos o nosso dataset para valores nulos ou outliers (valores fora da norma), a sua cardinalidade e de uma forma geral com que se parece cada tipo de dado.
+```
+### Data Preparation
+```
+A fase de Preparação dos Dados é das mais importantes, senão a mais importante em todo o projeto, sendo que é nesta fase que trancamos virtualmente o desempenho do nosso algoritmo (mesmo sem saber).
+Nesta fase iremos fazer o tratamento completo aos dados de forma que estes estejam nas melhores condições para serem passados pelos modelos de Machine Learning.
+Sendo assim fizemos a seleção dos atributos que consideramos relevantes para processamento nos modelos. Para isto realizamos um estudo das correlações dos atributos, quer entre si, quer com o atributo que pretendemos prever(sobretudo com o atributo que pretendemos prever). Para realizar este estudo utilizamos técnicas quer manuais (como analisar a nuvem volumétrica das relações dos atributos) quer automáticas (como analisar os resultados de um GridSearch com todos os atributos utilizando os modelos).
+Esta técnica automática da seleção dos atributos resultou em criarmos 3 cenários diferentes, cada um com um grupo diferente (mas, na mesma relevante) de dados.
+```
+### Modeling 
+```
+Para o processo de modelação utilizamos a técnica de Cross Validation de forma a correr múltiplos modelos em sequência e avaliar os resultados deles.
+O cross validation é uma técnica utilizada para validar a estabilidade do nosso modelo de Machine Learning. É necessário ter uma forma de garantia de que o modelo resolveu a maioria dos padrões dos dados corretamente sem captar muito ruído obtendo um modelo com alta variância (para ser consistente com todos os datasets de teste possíveis) e com baixa “pré-configuração” (bias).
+Sendo assim utilizamos a técnica de cross validation para avaliar o desempenho dos nossos modelos face a dados nunca antes vistos por eles (dados de teste).
+Existem várias abordagens para o cross validation porém a que iremos usar é o Stratified KFold que se trata de uma extensão do KFold especialmente para problemas de classificação.
+Esta técnica permite que, em vez de as divisões do dataset serem realizadas de forma aleatória, é assegurado que a percentagem de cada classe da variável target é mantida a mesma para cada fold, assim como no dataset original. Por exemplo, a partir da etapa de Exploração dos Dados, foi possível verificar que existe uma percentagem de 37% de dados da classe T, 23% da classe E, 20% da classe M e 20% da classe ET, sendo que em cada fold irá ser preservada essa mesma percentagem de dados de cada classe.
+Esta técnica de cross validation é geralmente utilizada quando se verificam duas condições, sendo elas:
+    • Quando se pretende preservar a percentagem de cada classe da variável target;
+    • Quando possuímos poucos dados de treino.
+Posto isto, como o grupo pretende manter a percentagem de cada classe da variável target e como possuímos poucos dados de treino decidimos utilizar esta técnica de cross validation, que permite assegurar que cada fold apresenta a mesma percentagem de dados de cada classe como no dataset original, evitando o problema de algum fold não apresentar dados de uma determinada classe, o que iria prejudicar a viabilidade dos resultados do modelo.
+```
+### Evaluation 
+```
+Na avaliação dos resultados iremos analisar os resultados obtidos e retirar as conclusões que forem necessárias. Comparar os resultados obtidos com os resultados previstos/esperados é necessário para averiguar o sucesso obtido.
+```
+
+### Deplyment 
+```
+A fase de deployment consiste em utilizar o/s modelo/s obtido/s nas fases anteriores, completos, treinados, otimizados num ambiente de produção onde os seus outputs criarão valor para a organização em questão.
+Em relação ao nosso projeto iremos exportar o modelo que obtivemos através das fases anteriores do CRISP-DM, modelo este que está pronto a ser utilizado para fazer previsões de dados.
+No nosso caso exportámos o modelo e utilizámo-lo, quer na previsão dos dados acima de 2019 (para poder analisar os resultados), quer na criação de uma Web API que recebe parâmetros de jogos e utiliza o modelo para prever o respetivo rating para poder enviar a resposta prevista.
+```
+
+## Getting Started
+
+### Dependencies
+
+* Windows 10/11, Linux, MacOS
+* R instalado na máquina que irá correr
+* Jupyter Notebooks (Anaconda)
+* RStudio
+
+### Usage (Jupyter Notebook)
+
+* Clonar o repositório
+```
+git clone https://github.com/JoaoGuedes01/ESRB_Rating_Predictor_CRISPDM.git
+```
+* Iniciar o serviço do Jupyter
+```
+cd Jupyter
+jupyter notebook
+```
+No final é apenas necessário navegar até ao notebook onde terá disponível todos os métodos separados convenientemente por divisões que poderá correr e explorar.
+
+### Usage (Shiny App)
+
+* Clonar o repositório
+```
+git clone https://github.com/JoaoGuedes01/ESRB_Rating_Predictor_CRISPDM.git
+```
+
+* Correr a aplicação shiny
+```
+cd shiny
+Rscript app.R
+```
+<p>Esta aplicação irá importar e carregar o modelo da pasta <b>model</b> e torná-lo utilizável através de pedidos HTTP, assim como disponibilizar uma interface gráfica onde é possível experimentar o modelo.</p>
+<p>Após correr o ficheiro <b>app.py</b> pode dirigir-se a <b>http://localhost:33507</b> para aceder à interface gráfica</p>
 
 
-## Tarefa A - Aconselhamento para compra de uma refeição <a name = "ta"></a>
-Tarefa:
-Dentro do conceito de food delivery, take away & drive-in, pretende-se que elabore um SBC para aconselhar sobre a escolha e compra de uma refeição (com entrega em casa ou take away).
+## Help
 
-### Parte 1 - Aquisição manual de conhecimento  <a name = "ta1"></a>
+Caso tenha problemas ao correr as funções do notebook proceda à instalação dos módulos em falta utilizando o comando:
+```
+pip install <modulo_em_falta>
+```
 
-Na parte 1 pertencente à Tarefa A, foi desenvolvido um sistema baseado em conhecimento que aconselha o utilizador um conjunto de pratos, usando como base as respostas que este selecionou num processo interativo de questões.
-Posto isto, a equipa iniciou o projeto com a elaboração de um formulário, usando a ferramenta Google Forms, com o objetivo de recolher informação para a realização de uma base de dados. A partir daqui o grupo seguiu para a conceção de um conjunto de questões que integram a plataforma final. Assim, o utilizador poderá selecionar o tipo de refeição que pretende realizar, o peso da mesma, a dieta, se pretende remover algum condimento e, por fim, o intervalo de preços com o qual se sente mais confortável. Após responder a este pequeno questionário, a plataforma irá sugerir ao utilizador um total de seis pratos, sendo que cada um contém uma breve descrição e três restaurantes que servem esse mesmo prato e respetivas localizações.
+## Authors
+- [João Guedes](https://github.com/JoaoGuedes01)
+- [João Pedro](https://github.com/joaopedrofg7)
+- [José Melo](https://www.linkedin.com/in/jos%C3%A9pmelo/)
+- [Rui Gomes](https://github.com/ruigomes99)
 
-De modo a que o projeto fosse possível, a equipa integrou seis ficheiros em _Prolog_: “baseconhecimento.pl”, “certainty.pl”, “database.pl”, “forward.pl”, “proof.pl” e “res.pl”. O primeiro ficheiro corresponde à base de conhecimento da equipa que compreende todas as condições _if/then,_ que constituem as regras de produção, e que irão retornar diferentes perfis depois de as condições serem avaliadas. O ficheiro “database.pl” diz respeito à base de dados que compõe um conjunto de perfis relativos a cada prato. Aqui, o grupo desenvolveu um número de perfis que achou razoável para demonstração, uma vez que a combinação de todas as opções resultaria numa quantidade astronómica deles (648 perfis x 6 pratos = 3888 pratos). Por fim, o grupo optou por utilizar o método _forward_ para o sistema de inferência, de modo a obter diferentes condições provindas dos factos que foram armazenados na base de dados.
+## Contribution
+ - [Pedro Pereira](https://www.linkedin.com/in/pedrojosepereira/)
 
-### Parte 2 - Aquisição automática de conhecimento <a name = "ta2"></a>
+## Version History
+* 0.1
+    * Initial Release
 
-Nesta segunda parte, a equipa considerou o trabalho realizado anteriormente, visto que são etapas bastante semelhantes. No entanto, aqui foram utilizadas técnicas automáticas de aquisição de conhecimento, de forma a ser possível extrair regras de produção automaticamente que serão implementadas na base de conhecimento.
+## License
 
-Assim sendo, a equipa procedeu à criação de um ficheiro CSV com os dados formulados na primeira parte. Seguidamente, o grupo importou este documento no _software Weka_, ferramenta de _Data Mining/Machine Learning_, de maneira a obter, automaticamente, um conjunto de regras de produção a serem integradas numa nova base de conhecimento.
-
-### Pré-requisitos <a name = "pre1"></a>
-* Ferramenta IDE para execução de código Backend em Java (Intellij/Netbeans/etc).
-* Node.js para execução da aplicação de Frontend (Node.js).
-
-
-## Getting started <a name = "getting1"></a>
-
-
-
-### Installation  <a name = "install1"></a>
-
-#### Clone the repo
-  ```sh
-  git clone  https://github.com/JoaoGuedes01/sbcBackend.git
-  ```
-
-### Usage <a name = "usage1"></a>
-  ```sh
-  Correr o Servidor Backend Spring Boot para a Tarefa A é necessário para o uso da aplicação Tarefa A.
-  ```
-   ```sh
-   Instalar as dependencias Node com 'npm i --save'.
-  Correr o servidor Frontend referente à parte A em node.js 'node app' que servirá a aplicação na porta 5000.
-  ```
-
-
-## Tarefa B - Aconselhamento de trajeto para entrega de uma refeição <a name = "tb"></a>
-Desenvolver um SBC para um estafeta que usa uma scooter como meio de transporte que trabalha para um sistema de entrega de um restaurante. O SBC deve aconselhar que encomendas o estafeta deve pegar no restaurante e qual o caminho a seguir para proceder às entregas. Optamos por desenvolver uma interface que dá ao utilizador a opção entre fazer encomendas(cliente) ou analisar os caminhos e entregar as encomendas(estafeta).
-
-### Parte 1 - Resolução via Procura <a name = "tb1"></a>
-
-No desenvolvimento da tarefa B, foi assumido o contexto de um sistema de entrega ao domicílio. Assim, foi desenvolvido um sistema baseado em conhecimento para um estafeta que usa uma scooter para fazer entregas de encomendas de um restaurante.
-
-Para complementar o trabalho, o grupo desenvolveu uma plataforma que permite ao utilizador utilizá-la com dois estatutos: cliente ou estafeta. Sendo cliente, este poderá definir a sua localização, segundo o mapa presente no enunciado do projeto, e optar entre oito pratos definidos com preços específicos para fazer uma encomenda. No caso de ser estafeta, o utilizador terá acesso a uma tabela com as diferentes encomendas realizadas pelos clientes, podendo optar por três métodos diferentes de procura (Depth-first, Breadthfirst ou Iterative-Deepening) e selecionar aquele que preferir. Uma vez escolhido o tipo de procura, o estafeta irá ter acesso a um mapa personalizado com o percurso, o destino, o item da encomenda, o preço, o gasto, o lucro, tempo da viagem e o tempo total que a entrega demorará.
-
-O projeto em questão tem dois objetivos associados, sendo que apenas o primeiro é de execução obrigatória. No entanto, o grupo procedeu à realização de ambos, ou seja, o estafeta poderá levar uma ou duas encomendas e averiguar uma rota que suporte a sua entrega.
-
-Para a execução do **primeiro objetivo**, a equipa utilizou cinco ficheiros em _Prolog_: ”bd.pl”, “breadthfirst.pl”, “depthfirst.pl”, “main.pl” e “search.pl”.
-
-O ficheiro correspondente à base de dados contém todos os percursos possíveis de realizar, isto é, os ramos do mapa, bem como contém os gastos associados a cada destino.
-
-O ficheiro “main.pl” contêm o código necessário para interação com o SBC incluindo as encomendas dinâmicas, as entregas e as chamadas aos métodos de procura, assim como toda a logica do calculo dos lucros baseada nos custo de deslocamento e preços de encomenda.
-
-Já o ficheiro “search.pl” permite executar o sistema de inferência que realiza a procura, que abrange todos os factos que permitem gerar uma transição. Além do mais, contém um dos métodos de pesquisa disponibilizados ao estafeta como opção de escolha: o Iterative Deepening.
-
-Por fim, os ficheiros “breadthfirst.pl” e “depthfirst.pl” envolvem os outros dois diferentes métodos de procura.
-
-Para a execução do **segundo objetivo**, a equipa manteve praticamente a mesma estrutura: ”bd.pl”, “breadthfirst.pl”, “main.pl” e “search.pl”. Porém, foi necessário a criação de um novo ficheiro “main.pl” para interação com o sistema que permite a avaliação de duas localizações ao mesmo tempo.
-
-Para terminar, tal como foi feito na tarefa anterior, o projeto foi desenvolvido em JAVA Spring Boot, de maneira a que fosse possível realizar a interface em HTML, CSS e JavaScript para que esta fosse mais interativo e agradável para o utilizador.
-
-### Parte 2 - Otimização do lucro, tempo ou ambos <a name = "tb2"></a>
-Nesta parte foram desenvolvidas as funcionalidades de optimização usando o método de hillclimbing para o objetivo A (maximizar o lucro), B (minimizar o tempo do percurso) e C (maximizar 0.8*lucro+0.2*(20-tempo)).
-
-Nesta segunda parte, foi utilizada a mesma base dados de forma a obter as mesmas rotas da parte anterior, otimizando uma solução inicial segundo vários parâmetros.
-
-Tenciona-se, então, maximizar o lucro, minimizar o tempo do percurso e maximizar a fórmula. Para que isto seja possível, o sistema baseado em conhecimento foi desenvolvido usando o método de Hill Climbing e Stochastic Hill Climbing.
-
-Posto isto, foram criados seis ficheiros em _Prolog_: “bd.pl”, “auxiliar.pl”, “hill.pl”, “oa.pl”, “ob.pl”, “oc.pl”.
-
-O primeiro ficheiro contém os factos “percurso” que constituem os quatro parâmetros, sendo estes os nós iniciais e de destino, o tempo que demora a percorrer cada percurso e o lucro obtido.
-
-O ficheiro “hill.pl” abrange os métodos de otimização que foram aplicados nesta parte da tarefa. Como auxílio, existe também o “auxiliar.pl” que contém as funções auxiliares ao método.
-
-Os últimos três ficheiros contêm a otimização dos objetivos A, B e C, respetivamente e contêm a lógica e funções de interação com o sistema.
-
-
-### Pré-requisitos <a name = "pre2"></a>
-* Ferramenta IDE para execução de código Backend em Java.
-* Node.js para execução da aplicação de Frontend.
-
-## Getting started <a name = "getting2"></a>
-
-### Quick-start <a name = "quick2"></a>
-
-#### Clone the repo
-  ```sh
-  git clone  https://github.com/JoaoGuedes01/sbcBackend.git
-  ```
-
-### Usage <a name = "usage2"></a>
-  ```sh
-  Correr o Servidor Backend Spring Boot para a Tarefa B é necessário para o uso da aplicação Tarefa A.
-  ```
-   ```sh
-   Instalar as dependencias Node com 'npm i --save'.
-  Correr o servidor Frontend referente à parte B em node.js 'node app' que servirá a aplicação na porta 5000.
-  ```
+This project is licensed under the MIT License - see the LICENSE.md file for details
   
 
 

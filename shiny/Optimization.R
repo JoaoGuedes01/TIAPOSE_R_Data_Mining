@@ -1,7 +1,13 @@
 source("hill.R") #  hclimbing is defined here
 source("blind.R") # fsearch is defined here
 source("montecarlo.R") # mcsearch is defined here
+# Otimização
 library(tabuSearch)
+
+# Otimização Moderna
+library(genalg)
+library(DEoptim)
+library(pso)
 #set.seed(1234)
 
 #Para executar este ficheiro ? necess?rio escolher o modelo pretendidoe o objetivo de otimiza??o
@@ -36,9 +42,11 @@ D = 35 #dimension
 DW = 7 #days of the week
 cost = c(rep(350,DW),rep(150,DW),rep(100,DW),rep(100,DW),rep(120,DW))
 solution = sample(c(0,1), replace=TRUE, size=D)
+Runs = 1000
 
 
 # evaluation function:
+#O1
 profit1 <- function(x) 
 { 
   x = round(x)
@@ -46,23 +54,36 @@ profit1 <- function(x)
   return(p)
 }
 
+#Repair Function
+repairSolution <- function(x) {
+  n = 0
+  for(i in 1:length(x)){
+    if(x[i] == 1 & n < 10)
+      n = n + 1
+    else 
+      x[i] = 0  
+  }
+  return(x)
+}
+
+#O2 repair
 profit2 <- function(x) 
 { 
   x = round(x)
+  x = repairSolution(x)
   p = sum(x*(vendas-cost))
   
-  #promotions limits
-  if(sum(x==1)>10){
-    p = -99999
-  }
   return(p)
 }
 
+
+#O3
 profit3 <- function(x) 
 { 
   x = round(x)
   p = sum(x*(vendas-cost))
   v = sum(x==1)
+  if(v==0) v=35
   s = p/v
   return(s)
 }
@@ -98,11 +119,32 @@ sales <- function()
 lower = rep(0,D) # lower bounds
 upper = rep(1,D) #  upper bounds
 
+createResDF = function(sol,total_profit){
+  sales_val = sol * vendas
+  cost_val = sol * cost
+  profit_val = sales_val - cost_val
+  
+  sols_res = list(all=sol[1:7],female=sol[8:14],male=sol[15:21],young=sol[22:28],adult=sol[29:35])
+  sales_res = list(all=sales_val[1:7],female=sales_val[8:14],male=sales_val[15:21],young=sales_val[22:28],adult=sales_val[29:35])
+  cost_res = list(all=cost_val[1:7],female=cost_val[8:14],male=cost_val[15:21],young=cost_val[22:28],adult=cost_val[29:35])
+  profit_res = list(all=profit_val[1:7],female=profit_val[8:14],male=profit_val[15:21],young=profit_val[22:28],adult=profit_val[29:35])
+  
+  res = list(sols_res=sols_res,sales_res=sales_res,cost_res=cost_res,profit_res=profit_res,total_profit = total_profit)
+  return(res)
+}
+
 
 #Optimization hill climbing
-hill <- function(evalF) 
+hill <- function(obj) 
 {
-  N = 1000 # 1000 searches
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  
+  N = Runs # 1000 searches
   REPORT = N/20 # report results
   
   
@@ -112,31 +154,57 @@ hill <- function(evalF)
   
   HC = hclimbing(par=solution,fn=evalF,change=rchange1,lower=lower,upper=upper,type="max",
                  control=list(maxit=N,REPORT=REPORT,digits=2))
+  
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    HC$sol = repairSolution(HC$sol)
+  }
+  
   cat("best solution:",HC$sol,"evaluation function",HC$eval,"\n")
-  best = HC$sol
-  res = list(ts1=best[1:7],ts2=best[8:14],ts3=best[15:21],ts4=best[22:28],ts5=best[29:35])
+
+  res = createResDF(HC$sol,HC$eval)
   return(res)
 }
 
 
 #Optimization montecarlo
-montecarlo <- function(evalF) 
+montecarlo <- function(obj) 
 {
-  N = 100000 # number of searches
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  
+  N = Runs # number of searches
   
   # monte carlo search 
   MC=mcsearch(fn=evalF,lower=lower,upper=upper,N=N,type="max")
+  
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    MC$sol = repairSolution(round(MC$sol))
+  }
+  
   cat("best solution:",round(MC$sol),"evaluation function",MC$eval,"\n")
-  best = round(MC$sol)
-  res = list(ts1=best[1:7],ts2=best[8:14],ts3=best[15:21],ts4=best[22:28],ts5=best[29:35])
+  
+  res = createResDF(MC$sol,MC$eval)
   return(res)
 }
 
 
 #Optimization sann
-sann <- function(evalF) 
+sann <- function(obj) 
 {
-  Runs = 100
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  
+  Runs = Runs
   
   best= -Inf # - infinity
   for(i in 1:Runs)
@@ -148,36 +216,164 @@ sann <- function(evalF)
     rchange2=function(par) # change for hclimbing
     { hchange(par,lower=lower,upper=upper,rnorm,mean=0,sd=0.5,round=TRUE) }
     
-    sa= optim(solution ,fn=evalF,method="SANN", gr=rchange2, control=list(maxit=100, temp=6000, trace=FALSE))
+    sa= optim(solution ,fn=evalF,method="SANN", gr=rchange2, control=list(maxit=100, temp=6000, fnscale=-1, trace=FALSE))
     L=evalF(sa$par)
     cat("execution:",i," solution:",round(sa$par)," profit:",L,"\n")
     if(L>best) { BESTSA=sa; best=L;}
   }
+  
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    BESTSA$par = repairSolution(BESTSA$par)
+  }
+  
   cat("Best Solution: ",BESTSA$par,"profit:",evalF(BESTSA$par),"\n")
-  best = BESTSA$par
-  res = list(ts1=best[1:7],ts2=best[8:14],ts3=best[15:21],ts4=best[22:28],ts5=best[29:35])
+  
+  res = createResDF(BESTSA$par,evalF(BESTSA$par))
   return(res)
 }
 
 
 #Optimization tabu
-tabu <- function(evalF) 
+tabu <- function(obj) 
 {
+  print("entrou tabu")
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  print("entrou tabu")
+  
   LIM = 1 # upper and lower bound
   lower = 0
   upper = LIM
   size = D
-  N = 100 # number of iterations
+  N = Runs # number of iterations
   
   s=tabuSearch(size,iters=N,objFunc=evalF,config=solution,verbose=TRUE)
   b=which.max(s$eUtilityKeep) # best index
   bs=s$configKeep[b,]
+  
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    bs = repairSolution(bs)
+  }
+  
   cat("best solution:",bs,"evaluation function",s$eUtilityKeep[b],"\n")
-  best = bs
-  res = list(ts1=best[1:7],ts2=best[8:14],ts3=best[15:21],ts4=best[22:28],ts5=best[29:35])
+  
+  res = createResDF(bs,s$eUtilityKeep[b])
   return(res)
 }
 
+# Otimização Moderna
+####################################################################################################################################################
+####################################################################################################################################################
+####################################################################################################################################################
+
+# some parameters that will be equal for all methods:
+popSize=100 # population size
+iter=100 # maximum number of iterations
+report=10 # report progress every 10 iterations
+
+
+## show best:
+showbest=function(method,par,eval)
+{ cat("method:",method,"\n > par:",round(par),"\n > eval:",abs(eval),"\n") }
+
+
+# Genetic Algorithm optimization: ------------------------------
+ITER<<- 1 # global variable with number of rbga iterations
+# monitoring function:
+traceGA=function(obj)
+{ if((ITER %% report)==0) # show progress every report iterations
+{ PMIN=which.min(obj$evaluations)
+cat("iter:",ITER," eval:",obj$evaluations[PMIN],"\n")
+}
+  ITER<<-ITER+1
+}
+
+
+rbgaFunction <- function(obj)
+{
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  # call to rbga: Genetic Algorithm:
+  rga=rbga(lower,upper,popSize=popSize,evalFunc=evalF,iter=iter,monitor=traceGA) 
+  # get the best solution:
+  # note: the way to get the best solution and evaluation depends on the implementation of the method and thus
+  # it can be different from method to method:
+  PMIN=which.min(rga$evaluations)
+  
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    rga$population[PMIN,] = repairSolution(round(rga$population[PMIN,]))
+  }
+  
+  showbest("rbga",rga$population[PMIN,],rga$evaluations[PMIN])
+
+  res = createResDF(round(rga$population[PMIN,]),abs(rga$evaluations[PMIN]))
+  return(res)
+}
+
+
+DEoptimFunction <- function(obj)
+{
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  
+  # Differential Evolution Optimization: -------------------------
+  de=DEoptim(fn=evalF,lower=lower,upper=upper,DEoptim.control(NP=popSize,itermax=iter,trace=report))
+  # get the best solution:
+  # note: the way to get the best solution and evaluation depends on the implementation of the method and thus
+  # it can be different from method to method:
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    de$optim$bestmem = repairSolution(round(de$optim$bestmem))
+  }
+  
+  showbest("DEoptim",de$optim$bestmem,de$optim$bestval)
+  
+  res = createResDF(round(de$optim$bestmem),abs(de$optim$bestval))
+  return(res)
+}
+
+
+psoptimFunction <- function(obj)
+{
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  
+  # Particle Swarm Optimization: ---------------------------------
+  # note: par needs to be vector with the size of D, in this case I am using lower, but upper could also be used.
+  # the values of par are not used.
+  ps=psoptim(par=lower,fn=evalF,lower=lower,upper=upper,control=list(trace=1,REPORT=report,maxit=iter,s=popSize))
+  # get the best solution:
+  # note: the way to get the best solution and evaluation depends on the implementation of the method and thus
+  # it can be different from method to method:
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    ps$par = repairSolution(round(ps$par))
+  }
+  
+  showbest("psoptim",ps$par,ps$value)
+  
+  res = createResDF(round(ps$par),abs(ps$value))
+  return(res)
+}
 
 #Runs
 #H1 = hill(profit1)

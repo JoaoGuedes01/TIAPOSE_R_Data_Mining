@@ -98,7 +98,7 @@ report=10 # report progress every 10 iterations
 
 ## show best:
 showbest=function(method,par,eval)
-{ cat("method:",method,"\n > par:",round(par),"\n > eval:",round(eval),"\n") }
+{ cat("method:",method,"\n > par:",round(par),"\n > eval:",abs(eval),"\n") }
 
 
 # Genetic Algorithm optimization: ------------------------------

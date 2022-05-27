@@ -1,4 +1,5 @@
-# Models
+
+# Models (Machine Learning)
 
 For our models we chose the ones that fitted the criteria of our data and prediction objective (Time Series Forecasting) from 2 major packages <b>Rminer</b> and <b>Forecast</b>.
 
@@ -42,7 +43,7 @@ Support Vector Machine can also be used as a regression method, maintaining all 
 <p><b>Authors:</b>Rob Hyndman, George Athanasopoulos, Christoph Bergmeir, Gabriel Caceres, Leanne Chhay, Mitchell O'Hara-Wild , Fotios Petropoulos, Slava Razbash, Earo Wang, Farah Yasmeen , R Core Team, Ross Ihaka, Daniel Reid, David Shaub, Yuan Tang, Zhenyu Zhou</p>
 ### Models
 
-#### **Holt Winters (lm)**
+#### **Holt Winters (HW)**
 Holt-Winter’s Exponential Smoothing as named after its two contributors: Charles Holt and Peter Winter’s is one of the oldest time series analysis techniques which takes into account the trend and seasonality while doing the forecasting. This method has 3 major aspects for performing the predictions. It has an average value with the trend and seasonality. The three aspects are 3 types of exponential smoothing and hence the hold winter’s method is also known as triple exponential smoothing.
 
 Let us look at each of the aspects in detail.
@@ -66,12 +67,33 @@ Where ℓtℓt is an estimate of the level of the series at time tt,
 btbt is an estimate of the trend of the series at time tt,
 
 αα is the smoothing coefficient
-#### **Arima (lm)**
+#### ****Autoregressive Integrated Moving Average**(ARIMA)**
 
 ARIMA is the abbreviation for AutoRegressive Integrated Moving Average. Auto Regressive (AR) terms refer to the lags of the differenced series, Moving Average (MA) terms refer to the lags of errors and I is the number of difference used to make the time series stationary.
 It's a forecasting algorithm based on the idea that **the information in the past values of the time series can alone be used to predict the future values**.
-#### **NN (lm)**
+#### **Neural Netowrk (NN)**
 Feed-forward neural networks with a single hidden layer and lagged inputs for forecasting univariate time series.
 A feed-forward neural network is **a biologically inspired classification algorithm**. It consists of a number of simple neuron-like processing units, organized in layers and every unit in a layer is connected with all the units in the previous layer.
-#### **ETS (lm)**
+#### **ETS (Error,Trend,Seasonal)**
 The ETS models are a family of time series models with an underlying state space model consisting of a level component, a trend component (T), a seasonal component (S), and an error term (E).
+
+# Optimization Algorithms
+#### **Hill Climbing**
+In numerical analysis, hill climbing is a mathematical optimization technique which belongs to the family of local search. It is an iterative algorithm that starts with an arbitrary solution to a problem, then attempts to find a better solution by making an incremental change to the solution. If the change produces a better solution, another incremental change is made to the new solution, and so on until no further improvements can be found.
+
+#### **Montecarlo**
+Monte Carlo methods, or Monte Carlo experiments, are a broad class of computational algorithms that rely on repeated random sampling to obtain numerical results. The underlying concept is to use randomness to solve problems that might be deterministic in principle. They are often used in physical and mathematical problems and are most useful when it is difficult or impossible to use other approaches. Monte Carlo methods are mainly used in three problem classes:[1] optimization, numerical integration, and generating draws from a probability distribution.
+
+#### **Tabu Search (Tabu)**
+Tabu search is a metaheuristic local search method used for mathematical optimization. Local search methods have the tendency to be stuck in suboptimal regions. TS enhances the performance of these techniques by prohibiting already visited solutions or others through user-provided rules. 
+
+#### **Simulated Annealing (Sann)**
+Simulated annealing (SA) is a probabilistic technique for approximating the global optimum of a given function. Specifically, it is a metaheuristic to approximate global optimization in a large search space for an optimization problem. It is often used when the search space is discrete (for example the traveling salesman problem, the boolean satisfiability problem, protein structure prediction, and job-shop scheduling). 
+
+#### **R Based Genetic Algorithm (RBGA)**
+A R based genetic algorithm that optimizes, using a user set evaluation function, a set of floats. It takes as input minimum and maximum values for the floats to optimizes. The optimum is the chromosome for which the evaluation value is minimal.
+
+#### **Differential Evolution Optimization (DeOptim)**
+In evolutionary computation, differential evolution (DE) is a method that optimizes a problem by iteratively trying to improve a candidate solution with regard to a given measure of quality. Such methods are commonly known as metaheuristics as they make few or no assumptions about the problem being optimized and can search very large spaces of candidate solutions. However, metaheuristics such as DE do not guarantee an optimal solution is ever found.
+#### **Particle Swarm Optimizer (PsOptim)**
+In computational science, particle swarm optimization (PSO)[1] is a computational method that optimizes a problem by iteratively trying to improve a candidate solution with regard to a given measure of quality. It solves a problem by having a population of candidate solutions, here dubbed particles, and moving these particles around in the search-space according to simple mathematical formula over the particle's position and velocity. Each particle's movement is influenced by its local best known position, but is also guided toward the best known positions in the search-space, which are updated as better positions are found by other particles. This is expected to move the swarm toward the best solutions.
