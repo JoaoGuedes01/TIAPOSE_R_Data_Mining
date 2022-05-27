@@ -10,7 +10,7 @@ forecast <- c("HW","Arima","NN","ETS")
 scenarios <- c("Scenario 1 (Untouched)","Scenario 2 (No outliers)","Scenario 3 (+ holidays)")
 scenarios_list <- list("Scenario 1 (Untouched)"=1,"Scenario 2 (No outliers)"=2,"Scenario 3 (+ holidays)"=3)
 
-opt_models <- c("HillClimb","MonteCarlo","Tabu","Sann")
+opt_models <- c("HillClimb","MonteCarlo","Tabu","Sann","RBGA","DeOptim","PsOptim")
 
 objs <- c("Objetivo 1","Objetivo 2", "Objetivo 3")
 
@@ -30,7 +30,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                selectInput("week_best",h5("Week"),choices = weeks),
                                                                selectInput("obj_best",label = h4("Optimization Objective"), choices = objs),
                                                                actionButton("predict_btn_best", label = "Run Model"),
-                                                               htmlOutput("best_model_output")
+                                                               actionButton("showHelpModal", label = icon("question"), style="background-color:#00b4d8; border-color:#00b4d8"),
                                                       ),
                                                       tabPanel("Hybrid",
                                                                h3("Prediction (Hybrid Modeling)"),
@@ -46,7 +46,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                h3("Optimization"),
                                                                selectInput("optmodel_hybrid",label = h4("Optimization Model"),choices = opt_models),
                                                                selectInput("obj_hybrid",label = h4("Objetivo de Otimização"), choices = objs),
-                                                               actionButton("predict_btn_hybrid", label = "Run Model")
+                                                               actionButton("predict_btn_hybrid", label = "Run Model"),
+                                                               actionButton("showHelpModal_hybrid", label = icon("question"), style="background-color:#00b4d8; border-color:#00b4d8"),
+                                                               
                                                       ),
                                                       tabPanel("Univariate",
                                                                h3("Prediction (Univariate Modeling)"),
@@ -59,7 +61,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                h3("Optimization"),
                                                                selectInput("optmodel_uni",label = h4("Optimization Model"),choices = opt_models),
                                                                selectInput("obj_uni",label = h4("Objetivo de Otimização"), choices = objs),
-                                                               actionButton("predict_btn_uni", label = "Run Model")
+                                                               actionButton("predict_btn_uni", label = "Run Model"),
+                                                               actionButton("showHelpModal_uni", label = icon("question"), style="background-color:#00b4d8; border-color:#00b4d8"),
+                                                               
                                                       ),
                                                       tabPanel("Multivariate",
                                                                h3("Prediction (Multivariate Modeling)"),
@@ -72,6 +76,8 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                selectInput("optmodel_multi",label = h4("Optimization Model"),choices = opt_models),
                                                                selectInput("obj_multi",label = h4("Objetivo de Otimização"), choices = objs),
                                                                actionButton("predict_btn_multi", label = "Run Model"),
+                                                               actionButton("showHelpModal_multi", label = icon("question"), style="background-color:#00b4d8; border-color:#00b4d8"),
+                                                               
                                                       )
                                           ),
                                         ),
@@ -99,7 +105,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                             tabPanel("Forecast", 
                                                      fluidRow(
                                                        tags$div(selectInput("forecast_cb",label = h4("Time Series"),choices = timeSeries_list),style="display:inline-block"),
-                                                       tags$div(selectInput("forecast_cb_window",label = h4("Sample Size"),choices = c(30,50,100)),style="display:inline-block"),                    
+                                                       tags$div(selectInput("forecast_cb_window",label = h4("Window Size"),choices = c(30,50,100)),style="display:inline-block"),                    
                                                      ),
                                                      textOutput("forecast_plot_name"),
                                                      plotOutput("fcast_plot")),
@@ -139,6 +145,59 @@ ui <- fluidPage(theme = shinytheme("flatly"),
 )
 
 server = function(input,output,session){
+  
+  
+  
+  observeEvent(input$showHelpModal_hybrid, {
+    showHelpModal()
+  })
+  observeEvent(input$showHelpModal_uni, {
+    showHelpModal()
+  })
+  observeEvent(input$showHelpModal_multi, {
+    showHelpModal()
+  })
+  
+  observeEvent(input$showHelpModal, {
+    showHelpModal()
+  })
+  
+  showHelpModal = function(){
+    showModal(modalDialog(
+      title = "Information",
+      fluidPage(
+        h2("Why are the weeks starting at Week 6?"),
+        h5("In order for us to train our models properly we need to have some data (i.e weeks 1-5) reserved to be train data"),
+        h2("What are de Optimization Objectives?"),
+        h3("Objective 1"),
+        h5("This Objective aims to get the highest profit disregarding the number of marketing campaigns ran."),
+        h3("Objective 2"),
+        h5("This objective aims to get the highest profit under 10 marketing campaigns across all types(Time Series) and days of the selected week."),
+        h3("Objective 3"),
+        h5("This objective aims to maximize the profits while having the lowest number of campaigns possible."),
+        h2("What is our best solution?"),
+        h4("Our best solution is divided into the 5 time series that are available"),
+        h5("(These models are backed up by our model results in the Results tab)"),
+        h3("All"),
+        h4("Hybrid Model: Holt Winters + ctree"),
+        h3("Female"),
+        h4("Hybrid Model: ETS + ctree"),
+        h3("Male"),
+        h4("Hybrid Model: lm + lm"),
+        h3("Young"),
+        h4("Hybrid Model: lm + lm"),
+        h3("Adult"),
+        h4("Univariate Model: Holt Winters"),
+        h3("Scenario"),
+        h4("Scenario 2"),
+        h5("With the Scenario 2's data we've had the best values for MAE/NMAE with all of our models"),
+        h3("Optimization Model"),
+        h4("Tabu"),
+        h5("All of the optimization models return great values but the best one, in our tests, was Tabu"),
+      ),
+      easyClose = TRUE
+    ))
+  }
   
   output$all_data <- renderDataTable(all_data)
 
@@ -343,19 +402,17 @@ server = function(input,output,session){
   createOptTableDF = function(res_list,ts){
     
     res = res_list
-    cona <- data.frame(matrix(ncol = 8, nrow = 0))
-    colnames(cona) <- c("Value", getWeekDays(week))
+    df <- data.frame(matrix(ncol = 8, nrow = 0))
+    colnames(df) <- c("Value", getWeekDays(week))
     
     sol_proc <- ifelse(res$sols_res[[ts]]==0, "No", "Yes")
-    cona[1,] = c("Solution",sol_proc)
+    df[1,] = c("Solution",sol_proc)
 
-    cona[2,] = c("Sales",res$sales_res[[ts]])
-    cona[3,] = c("Cost",res$cost_res[[ts]])
-    cona[4,] = c("Profit",res$profit_res[[ts]])
-    
-    
-    
-    return(cona)
+    df[2,] = c("Sales",res$sales_res[[ts]])
+    df[3,] = c("Cost",res$cost_res[[ts]])
+    df[4,] = c("Profit",res$profit_res[[ts]])
+
+    return(df)
   }
   
   
@@ -369,10 +426,6 @@ server = function(input,output,session){
     opt_model = "Tabu"
     #opt_model = "HillClimb"
     obj_best= input$obj_best
-    
-    cona = paste(solutionType, cen, multi_model, uni_model, opt_model, sep = "<br/>")
-    
-    output$best_model_output = renderUI({HTML(cona)})
     
     # Forecast
     res_model = BestModel(week)

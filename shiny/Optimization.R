@@ -1,7 +1,13 @@
 source("hill.R") #  hclimbing is defined here
 source("blind.R") # fsearch is defined here
 source("montecarlo.R") # mcsearch is defined here
+# Otimização
 library(tabuSearch)
+
+# Otimização Moderna
+library(genalg)
+library(DEoptim)
+library(pso)
 #set.seed(1234)
 
 #Para executar este ficheiro ? necess?rio escolher o modelo pretendidoe o objetivo de otimiza??o
@@ -231,6 +237,7 @@ sann <- function(obj)
 #Optimization tabu
 tabu <- function(obj) 
 {
+  print("entrou tabu")
   switch(  
     obj,  
     "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
@@ -260,6 +267,113 @@ tabu <- function(obj)
   return(res)
 }
 
+# Otimização Moderna
+####################################################################################################################################################
+####################################################################################################################################################
+####################################################################################################################################################
+
+# some parameters that will be equal for all methods:
+popSize=100 # population size
+iter=100 # maximum number of iterations
+report=10 # report progress every 10 iterations
+
+
+## show best:
+showbest=function(method,par,eval)
+{ cat("method:",method,"\n > par:",round(par),"\n > eval:",abs(eval),"\n") }
+
+
+# Genetic Algorithm optimization: ------------------------------
+ITER<<- 1 # global variable with number of rbga iterations
+# monitoring function:
+traceGA=function(obj)
+{ if((ITER %% report)==0) # show progress every report iterations
+{ PMIN=which.min(obj$evaluations)
+cat("iter:",ITER," eval:",obj$evaluations[PMIN],"\n")
+}
+  ITER<<-ITER+1
+}
+
+
+rbgaFunction <- function(obj)
+{
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  # call to rbga: Genetic Algorithm:
+  rga=rbga(lower,upper,popSize=popSize,evalFunc=evalF,iter=iter,monitor=traceGA) 
+  # get the best solution:
+  # note: the way to get the best solution and evaluation depends on the implementation of the method and thus
+  # it can be different from method to method:
+  PMIN=which.min(rga$evaluations)
+  
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    rga$population[PMIN,] = repairSolution(round(rga$population[PMIN,]))
+  }
+  
+  showbest("rbga",rga$population[PMIN,],rga$evaluations[PMIN])
+
+  res = createResDF(round(rga$population[PMIN,]),abs(rga$evaluations[PMIN]))
+  return(res)
+}
+
+
+DEoptimFunction <- function(obj)
+{
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  
+  # Differential Evolution Optimization: -------------------------
+  de=DEoptim(fn=evalF,lower=lower,upper=upper,DEoptim.control(NP=popSize,itermax=iter,trace=report))
+  # get the best solution:
+  # note: the way to get the best solution and evaluation depends on the implementation of the method and thus
+  # it can be different from method to method:
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    de$optim$bestmem = repairSolution(round(de$optim$bestmem))
+  }
+  
+  showbest("DEoptim",de$optim$bestmem,de$optim$bestval)
+  
+  res = createResDF(round(de$optim$bestmem),abs(de$optim$bestval))
+  return(res)
+}
+
+
+psoptimFunction <- function(obj)
+{
+  switch(  
+    obj,  
+    "Objetivo 1"= {print("PROFIT 1"); evalF = profit1},
+    "Objetivo 2"= {print("PROFIT 2"); evalF = profit2},
+    "Objetivo 3"= {print("PROFIT 3"); evalF = profit3}
+  )
+  
+  # Particle Swarm Optimization: ---------------------------------
+  # note: par needs to be vector with the size of D, in this case I am using lower, but upper could also be used.
+  # the values of par are not used.
+  ps=psoptim(par=lower,fn=evalF,lower=lower,upper=upper,control=list(trace=1,REPORT=report,maxit=iter,s=popSize))
+  # get the best solution:
+  # note: the way to get the best solution and evaluation depends on the implementation of the method and thus
+  # it can be different from method to method:
+  if(obj == "Objetivo 2"){
+    print("obj 2 ot")
+    ps$par = repairSolution(round(ps$par))
+  }
+  
+  showbest("psoptim",ps$par,ps$value)
+  
+  res = createResDF(round(ps$par),abs(ps$value))
+  return(res)
+}
 
 #Runs
 #H1 = hill(profit1)

@@ -17,7 +17,7 @@ Holdout <- function(week){
 
 # test "2013-05-14"
 getWeek = function(weekNumber){
-  init = 33
+  init = 36
   resInit <- 7 * (weekNumber-1) + init
   resFinal <- resInit + 6
   res <- c(resInit:resFinal)
@@ -39,39 +39,40 @@ initVars = function(){
   models_rminer <<- c("lm","mlpe","naive","ctree","mlp","randomForest","mr","rvm","ksvm")
   models_forecast <<- c("HW","Arima","NN","ETS")
   weeks <<- list(
-    "Week 1" = 1,
-    "week 2" = 2,
-    "week 3" = 3,
-    "week 4" = 4,
-    "week 5" = 5,
-    "week 6" = 6,
-    "week 7" = 7,
-    "week 8" = 8,
-    "week 9" = 9,
-    "week 10" = 10,
-    "week 11" = 11,
-    "week 12" = 12,
-    "week 13" = 13,
-    "week 14" = 14,
-    "week 15" = 15,
-    "week 16" = 16,
-    "week 17" = 17,
-    "week 18" = 18,
-    "week 19" = 19,
-    "week 20" = 20,
-    "week 21" = 21,
-    "week 22" = 22,
-    "week 23" = 23,
-    "week 24" = 24,
-    "week 25" = 25,
-    "week 26" = 26,
-    "week 27" = 27,
-    "week 28" = 28,
-    "week 29" = 29,
-    "week 30" = 30,
-    "week 31" = 31,
-    "week 32" = 32
+    "Week 6" = 1,
+    "week 7" = 2,
+    "week 8" = 3,
+    "week 9" = 4,
+    "week 10" = 5,
+    "week 11" = 6,
+    "week 12" = 7,
+    "week 13"= 8,
+    "week 14" = 9,
+    "week 15" = 10,
+    "week 16" = 11,
+    "week 17" = 12,
+    "week 18" = 13,
+    "week 19" = 14,
+    "week 20" = 15,
+    "week 21" = 16,
+    "week 22" = 17,
+    "week 23" = 18,
+    "week 24" = 19,
+    "week 25" = 20,
+    "week 26" = 21,
+    "week 27" = 22,
+    "week 28" = 23,
+    "week 29" = 24,
+    "week 30" = 25,
+    "week 31" = 26,
+    "week 32" = 27,
+    "week 33" = 28,
+    "week 34" = 29,
+    "week 35" = 30,
+    "week 36" = 31
   )
+  
+  
   
 
   
@@ -535,7 +536,10 @@ Optimization = function(opt_model,preds,obj){
     "HillClimb"= {print("hillclimb"); res = hill(obj)},
     "MonteCarlo"= {print("mc"); res = montecarlo(obj)},
     "Tabu"= {print("tabu"); res = tabu(obj)},
-    "Sann"= {print("sann"); res = sann(obj)}
+    "Sann"= {print("sann"); res = sann(obj)},
+    "RBGA" = {print("rgba"); res = rbgaFunction(obj)},
+    "DeOptim" = {print("deoptim"); res = DEoptimFunction(obj)},
+    "PsOptim" = {print("psoptim"); res = psoptimFunction(obj)}
   )
   return(res)
 }
