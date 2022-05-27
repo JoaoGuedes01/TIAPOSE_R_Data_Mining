@@ -178,7 +178,7 @@ NMAE: <b>12.83</b>
 
 ### **Adult**
 <p>
-For this time series the aproach was the <b>Multivariate Model</b> composed by
+For this time series the aproach was the <b>Univariate Model</b> composed by
 </p>
 <p>
 Univariate Model: <b>Holt Winters</b>
