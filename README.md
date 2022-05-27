@@ -78,7 +78,7 @@ No nosso caso exportámos o modelo e utilizámo-lo, quer na previsão dos dados 
 
 * Clonar o repositório
 ```
-git clone https://github.com/JoaoGuedes01/ESRB_Rating_Predictor_CRISPDM.git
+git clone https://github.com/JoaoGuedes01/TIAPOSE_R_Data_Mining
 ```
 * Iniciar o serviço do Jupyter
 ```
