@@ -6,33 +6,6 @@
   
   <h2 align="center">Projeto de Data Mining em R Grupo 5 TP2 - MIEGSI 2021/2022</h2>
   <br>
-  
-## Índice de conteúdos
-
-- [Índice de conteúdos](#índice-de-conteúdos)
-- [Introdução <a name = "intro"></a>](#introdução-)
-- [Tarefa A - Aconselhamento para compra de uma refeição <a name = "ta"></a>](#tarefa-a---aconselhamento-para-compra-de-uma-refeição-)
-  - [Parte 1 - Aquisição manual de conhecimento  <a name = "ta1"></a>](#parte-1---aquisição-manual-de-conhecimento--)
-  - [Parte 2 - Aquisição automática de conhecimento <a name = "ta2"></a>](#parte-2---aquisição-automática-de-conhecimento-)
-  - [Pré-requisitos <a name = "pre1"></a>](#pré-requisitos-)
-- [Getting started <a name = "getting1"></a>](#getting-started-)
-  - [Installation  <a name = "install1"></a>](#installation--)
-    - [Clone the repo](#clone-the-repo)
-  - [Usage <a name = "usage1"></a>](#usage-)
-- [Tarefa B - Aconselhamento de trajeto para entrega de uma refeição <a name = "tb"></a>](#tarefa-b---aconselhamento-de-trajeto-para-entrega-de-uma-refeição-)
-  - [Parte 1 - Resolução via Procura <a name = "tb1"></a>](#parte-1---resolução-via-procura-)
-  - [Parte 2 - Otimização do lucro, tempo ou ambos <a name = "tb2"></a>](#parte-2---otimização-do-lucro-tempo-ou-ambos-)
-  - [Pré-requisitos <a name = "pre2"></a>](#pré-requisitos--1)
-- [Getting started <a name = "getting2"></a>](#getting-started--1)
-  - [Quick-start <a name = "quick2"></a>](#quick-start-)
-    - [Clone the repo](#clone-the-repo-1)
-  - [Usage <a name = "usage2"></a>](#usage--1)
-- [Ferramentas <a name = "built"></a>](#ferramentas-)
-- [Contactos <a name = "contact"></a>](#contactos-)
-- [Acknowledgments <a name = "ack"></a>](#acknowledgments-)
-- [Referências <a name = "refer"></a>](#referências-)
-- [Licensa <a name = "license"></a>](#licensa-)
-- [Repositório Front-End<a name = "Repositório Front-End"></a>](#repositório-front-end)
 
 ## Introdução <a name = "intro"></a>
 No âmbito da avaliação da unidade curricular de Técnicas de Inteligência Artificial na Previsão e Otimização em Sistemas Empresariais, inserida no 2º semestre do 4º ano do Mestrado Integrado em Engenharia e Gestão de Sistemas de Informação, foi proposto a elaboração de um projeto focado no suporte à gestão de um espaço comercial alvo de um projeto piloto previamente realizado por uma empresa de TI.
@@ -82,7 +55,7 @@ Posto isto, como o grupo pretende manter a percentagem de cada classe da variáv
 Na avaliação dos resultados iremos analisar os resultados obtidos e retirar as conclusões que forem necessárias. Comparar os resultados obtidos com os resultados previstos/esperados é necessário para averiguar o sucesso obtido.
 ```
 
-### Deplyment 
+### Deployment 
 ```
 A fase de deployment consiste em utilizar o/s modelo/s obtido/s nas fases anteriores, completos, treinados, otimizados num ambiente de produção onde os seus outputs criarão valor para a organização em questão.
 Em relação ao nosso projeto iremos exportar o modelo que obtivemos através das fases anteriores do CRISP-DM, modelo este que está pronto a ser utilizado para fazer previsões de dados.
@@ -131,17 +104,14 @@ Rscript app.R
 
 Caso tenha problemas ao correr as funções do notebook proceda à instalação dos módulos em falta utilizando o comando:
 ```
-pip install <modulo_em_falta>
+install.packages(<modulo_em_falta>)
 ```
 
 ## Authors
 - [João Guedes](https://github.com/JoaoGuedes01)
-- [João Pedro](https://github.com/joaopedrofg7)
-- [José Melo](https://www.linkedin.com/in/jos%C3%A9pmelo/)
-- [Rui Gomes](https://github.com/ruigomes99)
-
-## Contribution
- - [Pedro Pereira](https://www.linkedin.com/in/pedrojosepereira/)
+- [João Teixeira](https://github.com/joaoteixeira10)
+- [Manuel Ribeiro](https://github.com/ManuelRibeiro89247)
+- [Tomás Lopes](https://github.com/Tomas-Lopes)
 
 ## Version History
 * 0.1
@@ -150,9 +120,6 @@ pip install <modulo_em_falta>
 ## License
 
 This project is licensed under the MIT License - see the LICENSE.md file for details
-  
-
-
   
 ## Ferramentas <a name = "built"></a>
 * [SWI-Prolog](https://www.swi-prolog.org)
@@ -164,22 +131,21 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 
 ## Contactos <a name = "contact"></a>
 
-* [Ana Pereira](mailto:a89168@alunos.uminho.pt)
-* [Beatriz Rodrigues](mailto:a89204@alunos.uminho.pt)
 * [João Guedes](mailto:a89237@alunos.uminho.pt)
+* [João Teixeira](mailto:a89218@alunos.uminho.pt)
+* [Tomás Lopes](mailto:a89223@alunos.uminho.pt)
 * [Manuel Ribeiro](mailto:a89247@alunos.uminho.pt)
 
 
 ## Acknowledgments <a name = "ack"></a>
 * [Paulo Cortez](http://www3.dsi.uminho.pt/pcortez/Home.html)
-* [André Pilastri](https://pilastri.github.io/andrepilastri.github.io/#about)
 
 ## Referências <a name = "refer"></a>
 
 ## Licensa <a name = "license"></a>
-* [License](https://github.com/JoaoGuedes01/sbcBackend/blob/main/LICENSE)
+* [License](https://github.com/JoaoGuedes01/TIAPOSE_R_Data_Mining/blob/main/LICENSE)
 ## Repositório Front-End<a name = "Repositório Front-End"></a>
-* [Front-End](https://github.com/JoaoGuedes01/sbcFrontend)
+* [Aplicação](https://github.com/JoaoGuedes01/TIAPOSE_R_Data_Mining/tree/main/shiny)
 
 
 Distributed under the MIT License. See `LICENSE` for more information.
