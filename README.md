@@ -7,6 +7,9 @@
   <h2 align="center">Projeto de Data Mining em R Grupo 5 TP2 - MIEGSI 2021/2022</h2>
   <br>
 
+## Implemetação (Aplicação Web)
+https://guedes.shinyapps.io/shiny/
+
 ## Introdução <a name = "intro"></a>
 No âmbito da avaliação da unidade curricular de Técnicas de Inteligência Artificial na Previsão e Otimização em Sistemas Empresariais, inserida no 2º semestre do 4º ano do Mestrado Integrado em Engenharia e Gestão de Sistemas de Informação, foi proposto a elaboração de um projeto focado no suporte à gestão de um espaço comercial alvo de um projeto piloto previamente realizado por uma empresa de TI.
 Todos os dados utilizados durante a elaboração do projeto foram fornecidos pelo docente, sendo estes provenientes do projeto piloto previamente elaborado por uma empresa não nomeada.
@@ -122,10 +125,13 @@ install.packages(<modulo_em_falta>)
 This project is licensed under the MIT License - see the LICENSE.md file for details
   
 ## Ferramentas <a name = "built"></a>
-* [SWI-Prolog](https://www.swi-prolog.org)
-* [Node.js](https://nodejs.org/en/)
-* [Java](https://www.java.com/en/)
-* [Spring Boot](https://spring.io/projects/spring-boot)
+* [R](https://www.r-project.org/)
+* [R Studio](https://www.rstudio.com/)
+* [Anaconda](https://www.anaconda.com/)
+* [Jupyter Notebooks](https://jupyter.org/)
+* [Shiny](https://shiny.rstudio.com/)
+* [ShinyApps.io](https://www.shinyapps.io/)
+* [Python](https://www.python.org/)
 
 
 
